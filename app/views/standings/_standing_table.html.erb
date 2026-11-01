@@ -1,0 +1,4 @@
+<h2><%= title %></h2>
+<div class="table-wrap"><table><thead><tr><th>#</th><th>Участник</th><th>Очки таблицы</th><th>Последний матч</th></tr></thead><tbody>
+<% entries.each do |entry| %><tr><td><%= entry.rank %></td><td><strong><%= entry.user.nickname %></strong></td><td><%= entry.points %></td><td><%= entry.last_match_points %></td></tr><% end %>
+</tbody></table></div>

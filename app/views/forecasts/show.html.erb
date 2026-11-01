@@ -1,0 +1,20 @@
+<h1><%= match_title(@match) %></h1>
+<div class="card">
+  <h2>Прогноз <%= @forecast.user == current_user ? "пользователя #{@forecast.user.nickname}" : @forecast.user.nickname %></h2>
+  <dl class="details-list">
+    <dt>Первый тайм</dt><dd><%= @forecast.halftime_roma %>:<%= @forecast.halftime_opponent %></dd>
+    <dt>Итог</dt><dd><%= @forecast.fulltime_roma %>:<%= @forecast.fulltime_opponent %></dd>
+    <dt>Первый гол</dt><dd><%= first_score_label(@forecast.first_score) %></dd>
+    <dt>Авторы голов</dt><dd><%= @forecast.scorers.map(&:name).join(", ").presence || "—" %></dd>
+    <dt>Ассисты</dt><dd><%= (@forecast.forecast_assists.map { |a| a.no_assist? ? "Без голевой передачи" : a.player&.name }.compact.join(", ").presence || "—") %></dd>
+    <% if @match.temporary_question %><dt>Временный вопрос</dt><dd><%= @forecast.temporary_question_option&.text || @forecast.temporary_answer_text %></dd><% end %>
+    <% if @forecast.user == current_user %><dt>Ставка ЗБ</dt><dd><%= @forecast.gold_points_stake %></dd><% end %>
+    <dt>Последнее сохранение</dt><dd><%= moscow_time(@forecast.updated_at) %></dd>
+  </dl>
+</div>
+<% if (score = @forecast.forecast_score) %>
+  <h2>Расчёт</h2>
+  <div class="card"><div class="stat"><%= score.total_points %> баллов</div><p>Место: <strong><%= score.placement %></strong></p>
+    <div class="table-wrap"><table><tbody><% score_breakdown(score).each do |name, points| %><tr><td><%= name %></td><td><strong><%= points %></strong></td></tr><% end %></tbody></table></div>
+  </div>
+<% end %>

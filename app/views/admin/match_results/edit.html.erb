@@ -1,0 +1,36 @@
+<%= render "admin/nav" %><h1>Результат: <%= match_title(@match) %></h1>
+<% if @result.confirmed? %><div class="alert alert-success">Результат подтверждён <%= moscow_time(@result.confirmed_at) %>. Для изменения сначала выполните откат сезона.</div><% end %>
+<div class="card">
+<%= render "shared/errors", object: @result %>
+<%= form_with model: @result, url: admin_match_result_path(@match), method: :patch, data: { controller: "goal-events" } do |form| %>
+  <fieldset <%= "disabled" if @result.confirmed? %>>
+  <h2>Счёт</h2>
+  <div class="grid-2">
+    <div><h3>Первый тайм</h3><div class="score-fields"><div><label>Рома</label><%= form.number_field :halftime_roma, min: 0, required: true %></div><strong>:</strong><div><label><%= @match.opponent %></label><%= form.number_field :halftime_opponent, min: 0, required: true %></div></div></div>
+    <div><h3>Итог после доп. времени</h3><div class="score-fields"><div><label>Рома</label><%= form.number_field :fulltime_roma, min: 0, required: true %></div><strong>:</strong><div><label><%= @match.opponent %></label><%= form.number_field :fulltime_opponent, min: 0, required: true %></div></div></div>
+  </div>
+  <h3>Кто открыл счёт?</h3><div class="check-list"><% [["roma", "Рома"], ["opponent", @match.opponent], ["nobody", "Никто"]].each do |value, label| %><div class="check-item"><%= form.radio_button :first_score, value %><%= form.label "first_score_#{value}", label %></div><% end %></div>
+
+  <h2>Голы Ромы</h2><p class="muted">Добавьте по одной строке на каждый гол Ромы. Для автогола соперника выберите «Автогол соперника».</p>
+  <div data-goal-events-target="list">
+    <% @result.goals.each_with_index do |goal, index| %>
+      <div class="goal-row">
+        <div><label>Автор гола</label><select name="goals[<%= index %>][scorer_value]"><option value="own_goal" <%= "selected" if goal.own_goal? %>>Автогол соперника</option><% @players.each do |player| %><option value="<%= player.id %>" <%= "selected" if goal.scorer_id == player.id %>><%= player.name %></option><% end %></select></div>
+        <div><label>Ассист</label><select name="goals[<%= index %>][assist_value]"><option value="none" <%= "selected" if goal.no_assist? %>>Без голевой передачи</option><% @players.each do |player| %><option value="<%= player.id %>" <%= "selected" if goal.assist_id == player.id %>><%= player.name %></option><% end %></select></div>
+        <button type="button" class="button button-danger button-small" data-action="goal-events#remove">Удалить</button>
+      </div>
+    <% end %>
+  </div>
+  <template data-goal-events-target="template"><div class="goal-row"><div><label>Автор гола</label><select name="goals[NEW_INDEX][scorer_value]"><option value="">Выберите</option><option value="own_goal">Автогол соперника</option><% @players.each do |player| %><option value="<%= player.id %>"><%= player.name %></option><% end %></select></div><div><label>Ассист</label><select name="goals[NEW_INDEX][assist_value]"><option value="none">Без голевой передачи</option><% @players.each do |player| %><option value="<%= player.id %>"><%= player.name %></option><% end %></select></div><button type="button" class="button button-danger button-small" data-action="goal-events#remove">Удалить</button></div></template>
+  <div class="actions"><button type="button" class="button button-secondary" data-action="goal-events#add">+ Добавить гол Ромы</button></div>
+
+  <% if (question = @match.temporary_question) %>
+    <h2>Временный вопрос</h2><p><strong><%= question.text %></strong></p><div class="check-item"><%= check_box_tag :question_voided, "1", question.voided?, id: "question_voided" %><label for="question_voided">Аннулировать вопрос</label></div>
+    <% if question.choice? %><p>Отметьте все правильные варианты:</p><div class="check-list"><% question.options.each do |option| %><div class="check-item"><%= check_box_tag "correct_option_ids[]", option.id, option.correct?, id: "correct_option_#{option.id}" %><label for="correct_option_<%= option.id %>"><%= option.text %></label></div><% end %></div>
+    <% else %><p>Отметьте формулировки ответов пользователей, которые считать правильными:</p><div class="check-list"><% @text_answers.each_with_index do |answer, index| %><div class="check-item"><%= check_box_tag "correct_text_answers[]", answer, question.accepted_answers.any? { |a| a.normalized_answer == TemporaryQuestionAcceptedAnswer.normalize(answer) }, id: "correct_text_#{index}" %><label for="correct_text_<%= index %>"><%= answer %></label></div><% end %></div><% end %>
+  <% end %>
+  <div class="actions"><%= form.submit "Сохранить черновик" %></div>
+  </fieldset>
+<% end %>
+</div>
+<% unless @result.confirmed? %><div class="actions"><%= button_to "Предварительно рассчитать", preview_admin_match_result_path(@match), method: :post, class: "button button-gold" %></div><% end %>

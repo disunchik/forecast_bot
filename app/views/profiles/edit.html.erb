@@ -1,0 +1,20 @@
+<h1>Настройки профиля</h1>
+<div class="card" style="max-width:680px">
+  <%= render "shared/errors", object: @user %>
+  <%= form_with model: @user, url: profile_path do |form| %>
+    <div class="field"><%= form.label :email_address, "Email" %><%= form.email_field :email_address, required: true %></div>
+    <hr>
+    <p class="muted">Оставьте пароль пустым, если менять его не нужно.</p>
+    <div class="field"><%= form.label :password, "Новый пароль" %><%= form.password_field :password %></div>
+    <div class="field"><%= form.label :password_confirmation, "Повтор нового пароля" %><%= form.password_field :password_confirmation %></div>
+    <hr>
+    <h3>Будущие push-уведомления</h3>
+    <div class="check-list">
+      <div class="check-item"><%= form.check_box :notify_forecast_open %><%= form.label :notify_forecast_open, "Открытие прогнозов" %></div>
+      <div class="check-item"><%= form.check_box :notify_forecast_reminder %><%= form.label :notify_forecast_reminder, "За 6 часов до закрытия" %></div>
+      <div class="check-item"><%= form.check_box :notify_results %><%= form.label :notify_results, "Результаты" %></div>
+      <div class="check-item"><%= form.check_box :notify_rewards %><%= form.label :notify_rewards, "Ачивки и ЗБ" %></div>
+    </div>
+    <div class="actions"><%= form.submit "Сохранить" %><%= link_to "Назад", profile_path, class: "button button-secondary" %></div>
+  <% end %>
+</div>

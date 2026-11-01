@@ -1,0 +1,9 @@
+<%= render "admin/nav" %>
+<h1>Админка</h1>
+<div class="grid-3">
+  <div class="card"><div class="muted">Активный сезон</div><div class="stat" style="font-size:1.3rem"><%= @season&.name || "—" %></div></div>
+  <div class="card"><div class="muted">Пользователей</div><div class="stat"><%= @users_count %></div></div>
+  <div class="card"><div class="muted">Активных игроков</div><div class="stat"><%= @players_count %></div></div>
+</div>
+<h2>Матчи</h2>
+<div class="cards"><% @upcoming_matches.each do |match| %><div class="card"><strong>№<%= match.forecast_number %> · <%= match_title(match) %></strong><br><span class="muted"><%= moscow_time(match.kickoff_at) %></span><div class="actions"><%= link_to "Открыть", admin_match_path(match), class: "button button-small" %></div></div><% end %></div>

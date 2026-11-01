@@ -1,0 +1,13 @@
+<%= render "admin/nav" %>
+<div class="actions" style="justify-content:space-between"><h1>Матч №<%= @match.forecast_number %></h1><div class="actions"><%= link_to "Редактировать", edit_admin_match_path(@match), class: "button button-secondary" %><%= link_to "Результат матча", edit_admin_match_result_path(@match), class: "button button-gold" %></div></div>
+<div class="card"><h2><%= match_title(@match) %></h2><dl class="details-list">
+<dt>Сезон</dt><dd><%= @match.season.name %></dd><dt>Турнир</dt><dd><%= @match.competition.name %></dd><dt>Начало</dt><dd><%= moscow_time(@match.kickoff_at) %></dd><dt>Открытие прогнозов</dt><dd><%= moscow_time(@match.forecast_opens_at) %></dd><dt>Закрытие</dt><dd><%= moscow_time(@match.forecast_closes_at) %></dd><dt>Статус</dt><dd><%= match_status_label(@match) %></dd><dt>Прогнозов</dt><dd><%= @match.forecasts.count %></dd><dt>Результат</dt><dd><%= result_state_label(@match.match_result) %></dd>
+</dl></div>
+<% if @match.temporary_question %><div class="card"><h3>Временный вопрос</h3><p><%= @match.temporary_question.text %> (<%= @match.temporary_question.points %> б.)</p><p class="muted"><%= @match.temporary_question.question_type %></p></div><% end %>
+<% if @match.forecasts.empty? && !@match.match_result&.confirmed? %><div class="actions"><%= button_to "Удалить матч", admin_match_path(@match), method: :delete, class: "button button-danger", data: { turbo_confirm: "Удалить матч?" } %></div><% end %>
+
+<h2>Прогнозы участников</h2>
+<div class="table-wrap"><table><thead><tr><th>Участник</th><th>HT</th><th>FT</th><th>ЗБ</th><th>Изменён</th></tr></thead><tbody>
+<% @match.forecasts.includes(:user).order(updated_at: :asc).each do |forecast| %><tr><td><strong><%= forecast.user.nickname %></strong></td><td><%= forecast.halftime_roma %>:<%= forecast.halftime_opponent %></td><td><%= forecast.fulltime_roma %>:<%= forecast.fulltime_opponent %></td><td><%= forecast.gold_points_stake %></td><td><%= moscow_time(forecast.updated_at) %></td></tr><% end %>
+<% if @match.forecasts.empty? %><tr><td colspan="5" class="empty">Прогнозов пока нет.</td></tr><% end %>
+</tbody></table></div>

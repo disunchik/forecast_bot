@@ -1,0 +1,15 @@
+<%= render "admin/nav" %>
+<div class="actions" style="justify-content:space-between">
+  <h1>Игроки</h1>
+  <%= link_to "Добавить игрока", new_admin_player_path, class: "button" %>
+</div>
+<nav class="admin-nav">
+  <%= link_to "Активные (#{@active_count})", admin_players_path(tab: "active") %>
+  <%= link_to "Неактивные (#{@inactive_count})", admin_players_path(tab: "inactive") %>
+</nav>
+<div class="table-wrap"><table><thead><tr><th>Игрок</th><th>Статус</th><th></th></tr></thead><tbody>
+<% @players.each do |player| %>
+<tr><td><strong><%= player.name %></strong></td><td><%= player.active? ? "Активный" : "Неактивный" %></td><td><div class="actions"><%= link_to "Изменить", edit_admin_player_path(player) %><% if player.active? %><%= button_to "В неактивные", archive_admin_player_path(player), method: :patch, class: "button button-small button-secondary" %><% else %><%= button_to "Вернуть", restore_admin_player_path(player), method: :patch, class: "button button-small" %><% end %></div></td></tr>
+<% end %>
+<% if @players.empty? %><tr><td colspan="3" class="empty">Список пуст.</td></tr><% end %>
+</tbody></table></div>

@@ -1,0 +1,56 @@
+<%= render "admin/nav" %>
+<div class="actions" style="justify-content:space-between">
+  <h1><%= @user.nickname %></h1>
+  <%= link_to "Редактировать", edit_admin_user_path(@user), class: "button button-secondary" %>
+</div>
+
+<div class="grid-3">
+  <div class="card"><div class="muted">Email</div><strong><%= @user.email_address || "Не задан" %></strong></div>
+  <div class="card"><div class="muted">Роль</div><strong><%= user_role_label(@user) %></strong></div>
+  <div class="card"><div class="muted">ЗБ</div><div class="stat"><%= @user.gold_points_balance(active_season) %></div></div>
+</div>
+
+<h2>Ручная операция ЗБ</h2>
+<div class="card">
+  <%= form_with url: admin_user_gold_point_transactions_path(@user) do |f| %>
+    <div class="grid-2">
+      <div class="field"><label>Сумма (+ или -)</label><%= number_field_tag :amount, nil, required: true %></div>
+      <div class="field"><label>Причина</label><%= text_field_tag :note, nil, required: true %></div>
+    </div>
+    <%= f.submit "Добавить операцию" %>
+  <% end %>
+</div>
+
+<h2>Выдать ачивку</h2>
+<div class="card">
+  <% available_achievements = Achievement.active.where.not(id: @user.achievement_ids).order(:name) %>
+  <% if available_achievements.any? %>
+    <% available_achievements.each do |achievement| %>
+      <div class="actions">
+        <strong style="min-width:220px"><%= achievement.name %></strong>
+        <span class="muted"><%= achievement.secret? ? "секретная" : "обычная" %></span>
+        <%= button_to "Выдать", award_admin_achievement_path(achievement), method: :post, params: { user_id: @user.id }, class: "button button-small" %>
+      </div>
+    <% end %>
+  <% else %>
+    <p class="muted">Доступных ачивок для выдачи нет.</p>
+  <% end %>
+</div>
+
+<h2>История ЗБ</h2>
+<div class="table-wrap">
+  <table>
+    <thead><tr><th>Дата</th><th>Сумма</th><th>Причина</th></tr></thead>
+    <tbody>
+      <% @transactions.each do |tx| %>
+        <tr><td><%= moscow_time(tx.created_at) %></td><td><%= tx.amount %></td><td><%= tx.note %></td></tr>
+      <% end %>
+    </tbody>
+  </table>
+</div>
+
+<h2>Прогнозы текущего сезона</h2>
+<div class="table-wrap"><table><thead><tr><th>Матч</th><th>HT</th><th>FT</th><th>Ставка ЗБ</th><th>Баллы</th></tr></thead><tbody>
+<% @forecasts.each do |forecast| %><tr><td>№<%= forecast.match.forecast_number %> · <%= match_title(forecast.match) %></td><td><%= forecast.halftime_roma %>:<%= forecast.halftime_opponent %></td><td><%= forecast.fulltime_roma %>:<%= forecast.fulltime_opponent %></td><td><%= forecast.gold_points_stake %></td><td><%= forecast.forecast_score&.total_points || "—" %></td></tr><% end %>
+<% if @forecasts.empty? %><tr><td colspan="5" class="empty">Прогнозов нет.</td></tr><% end %>
+</tbody></table></div>

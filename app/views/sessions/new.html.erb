@@ -1,0 +1,16 @@
+<% content_for :title, "Вход — AS Roma бот прогнозов" %>
+<div class="card" style="max-width:520px;margin:0 auto">
+  <h1>Вход</h1>
+  <%= form_with url: session_path do |form| %>
+    <div class="field">
+      <%= form.label :nickname, "Никнейм" %>
+      <%= form.text_field :nickname, required: true, autofocus: true, autocomplete: "username", value: params[:nickname] %>
+    </div>
+    <div class="field">
+      <%= form.label :password, "Пароль" %>
+      <%= form.password_field :password, required: true, autocomplete: "current-password", maxlength: 72 %>
+    </div>
+    <%= form.submit "Войти" %>
+  <% end %>
+  <p class="muted">Нет аккаунта? <%= link_to "Зарегистрироваться", new_registration_path %></p>
+</div>

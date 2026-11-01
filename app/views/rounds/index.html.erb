@@ -1,0 +1,11 @@
+<h1>Туры текущего сезона</h1>
+<div class="cards">
+  <% @matches.each do |match| %>
+    <div class="card">
+      <div><span class="badge">№<%= match.forecast_number %></span> <span class="badge"><%= match.competition.name %></span></div>
+      <h3><%= match_title(match) %></h3>
+      <p class="muted"><%= moscow_time(match.kickoff_at) %> · <%= match_status_label(match) %></p>
+      <% if match.predictions_visible_to_all? %><%= link_to "Открыть тур", round_path(match), class: "button button-small" %><% else %><span class="muted">Прогнозы пока скрыты</span><% end %>
+    </div>
+  <% end %>
+</div>

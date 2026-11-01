@@ -1,0 +1,3 @@
+<h1>Прогноз: <%= match_title(@match) %></h1>
+<p class="muted"><%= @match.competition.name %> · Матч №<%= @match.forecast_number %> · Закрытие <%= moscow_time(@match.forecast_closes_at) %></p>
+<div class="cards"><%= render "form", forecast: @forecast, match: @match %></div>

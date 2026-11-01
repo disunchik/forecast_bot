@@ -1,29 +1,41 @@
 <!DOCTYPE html>
-<html>
+<html lang="ru">
   <head>
-    <title><%= content_for(:title) || "Forecast Bot" %></title>
+    <title><%= content_for(:title) || "AS Roma бот прогнозов" %></title>
     <meta name="viewport" content="width=device-width,initial-scale=1">
     <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="application-name" content="Forecast Bot">
+    <meta name="application-name" content="AS Roma бот прогнозов">
     <meta name="mobile-web-app-capable" content="yes">
+    <meta name="theme-color" content="#7a1732">
     <%= csrf_meta_tags %>
     <%= csp_meta_tag %>
-
     <%= yield :head %>
-
-    <%# Enable PWA manifest for installable apps (make sure to enable in config/routes.rb too!) %>
-    <%#= tag.link rel: "manifest", href: pwa_manifest_path(format: :json) %>
-
+    <%= tag.link rel: "manifest", href: pwa_manifest_path(format: :json) %>
     <link rel="icon" href="/icon.png" type="image/png">
-    <link rel="icon" href="/icon.svg" type="image/svg+xml">
     <link rel="apple-touch-icon" href="/icon.png">
-
-    <%# Includes all stylesheet files in app/assets/stylesheets %>
     <%= stylesheet_link_tag :app, "data-turbo-track": "reload" %>
     <%= javascript_importmap_tags %>
   </head>
-
   <body>
-    <%= yield %>
+    <header class="site-header">
+      <div class="shell header-inner">
+        <%= link_to "AS Roma бот прогнозов", root_path, class: "brand" %>
+        <% if authenticated? %>
+          <nav class="main-nav">
+            <%= link_to "Главная", root_path %>
+            <%= link_to "Таблица", standings_path %>
+            <%= link_to "Туры", rounds_path %>
+            <%= link_to "Профиль", profile_path %>
+            <%= link_to "Админка", admin_root_path, class: "admin-link" if current_user&.admin? %>
+          </nav>
+        <% end %>
+      </div>
+    </header>
+
+    <main class="shell page">
+      <% if flash[:notice] %><div class="alert alert-success"><%= flash[:notice] %></div><% end %>
+      <% if flash[:alert] %><div class="alert alert-error"><%= flash[:alert] %></div><% end %>
+      <%= yield %>
+    </main>
   </body>
 </html>

@@ -1,0 +1,14 @@
+<%= render "admin/nav" %><h1>Редактировать пользователя</h1>
+<div class="card" style="max-width:680px">
+  <%= render "shared/errors", object: @user %>
+  <%= form_with model: [:admin, @user] do |form| %>
+    <div class="field"><%= form.label :nickname, "Никнейм" %><%= form.text_field :nickname, required: true, maxlength: 20 %></div>
+    <div class="field"><%= form.label :email_address, "Email" %><%= form.email_field :email_address %></div>
+    <div class="field"><%= form.label :role, "Роль" %><%= form.select :role, [["Пользователь", "user"], ["Администратор", "admin"]] %></div>
+    <hr>
+    <p class="muted">Сброс пароля администратором. Оставьте поля пустыми, если пароль менять не нужно.</p>
+    <div class="field"><%= form.label :password, "Новый пароль" %><%= form.password_field :password %></div>
+    <div class="field"><%= form.label :password_confirmation, "Повтор пароля" %><%= form.password_field :password_confirmation %></div>
+    <div class="actions"><%= form.submit "Сохранить" %><%= link_to "Назад", admin_user_path(@user), class: "button button-secondary" %></div>
+  <% end %>
+</div>

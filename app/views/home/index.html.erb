@@ -1,0 +1,46 @@
+<h1>Главная</h1>
+<% unless active_season %>
+  <div class="alert alert-error">Активный сезон ещё не создан.</div>
+<% else %>
+  <p class="muted">Сезон <strong><%= active_season.name %></strong> · Баланс: <strong><%= current_user.gold_points_balance(active_season) %> ЗБ</strong> · Доступно: <strong><%= current_user.available_gold_points(active_season) %> ЗБ</strong></p>
+
+  <% if @open_matches.any? %>
+    <h2>Открытые прогнозы</h2>
+    <div class="cards">
+      <% @open_matches.each do |match| %>
+        <% forecast = @forecasts[match.id] %>
+        <article class="card card-accent">
+          <div class="badge badge-open">Прогноз открыт</div>
+          <h2><%= match_title(match) %></h2>
+          <p><%= match.competition.name %> · Матч прогнозистов №<%= match.forecast_number %></p>
+          <p class="muted">Начало: <%= moscow_time(match.kickoff_at) %><br>Приём до: <%= moscow_time(match.forecast_closes_at) %></p>
+          <% if forecast %>
+            <div class="card" style="background:#fffaf3">
+              <strong>Ваш прогноз</strong><br>
+              HT: <%= forecast.halftime_roma %>:<%= forecast.halftime_opponent %> · FT: <%= forecast.fulltime_roma %>:<%= forecast.fulltime_opponent %><br>
+              Первый гол: <%= first_score_label(forecast.first_score) %>
+            </div>
+            <div class="actions"><%= link_to "Изменить прогноз", edit_match_forecast_path(match, forecast), class: "button" %></div>
+          <% else %>
+            <div class="actions"><%= link_to "Сделать прогноз", new_match_forecast_path(match), class: "button" %></div>
+          <% end %>
+        </article>
+      <% end %>
+    </div>
+  <% else %>
+    <div class="card empty">Сейчас нет открытых прогнозов.</div>
+  <% end %>
+
+  <% if @upcoming_match && !@open_matches.include?(@upcoming_match) %>
+    <h2>Ближайший матч</h2>
+    <div class="card">
+      <h3><%= match_title(@upcoming_match) %></h3>
+      <p><%= @upcoming_match.competition.name %> · <%= moscow_time(@upcoming_match.kickoff_at) %></p>
+      <% if Time.current < @upcoming_match.forecast_opens_at %>
+        <p class="muted">Прогноз откроется <%= moscow_time(@upcoming_match.forecast_opens_at) %>.</p>
+      <% else %>
+        <p class="muted">Приём прогнозов на этот матч уже закрыт.</p>
+      <% end %>
+    </div>
+  <% end %>
+<% end %>

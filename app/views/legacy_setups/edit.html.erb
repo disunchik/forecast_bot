@@ -1,0 +1,11 @@
+<div class="card" style="max-width:560px;margin:0 auto">
+  <h1>Завершение переноса аккаунта</h1>
+  <p>Старое кодовое слово использовалось только для первого входа. Укажите email и новый пароль.</p>
+  <%= render "shared/errors", object: @user %>
+  <%= form_with model: @user, url: legacy_setup_path do |form| %>
+    <div class="field"><%= form.label :email_address, "Email" %><%= form.email_field :email_address, required: true %></div>
+    <div class="field"><%= form.label :password, "Новый пароль" %><%= form.password_field :password, required: true %></div>
+    <div class="field"><%= form.label :password_confirmation, "Повтор пароля" %><%= form.password_field :password_confirmation, required: true %></div>
+    <%= form.submit "Сохранить и продолжить" %>
+  <% end %>
+</div>

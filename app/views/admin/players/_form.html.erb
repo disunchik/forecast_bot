@@ -1,0 +1,1 @@
+<%= render "shared/errors", object: player %><%= form_with model: [:admin, player] do |form| %><div class="field"><%= form.label :name, "Имя игрока" %><%= form.text_field :name, required: true %></div><div class="actions"><%= form.submit "Сохранить" %><%= link_to "Назад", admin_players_path, class: "button button-secondary" %></div><% end %>

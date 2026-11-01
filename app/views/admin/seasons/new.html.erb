@@ -1,0 +1,1 @@
+<%= render "admin/nav" %><h1>Новый сезон</h1><div class="card" style="max-width:560px"><%= render "shared/errors", object: @season %><%= form_with model: [:admin, @season] do |f| %><div class="field"><%= f.label :name, "Название, например 2027/2028" %><%= f.text_field :name, required: true %></div><%= f.submit "Создать" %><% end %></div>

@@ -1,10 +1,83 @@
-/*
- * This is a manifest file that'll be compiled into application.css.
- *
- * With Propshaft, assets are served efficiently without preprocessing steps. You can still include
- * application-wide styles in this file, but keep in mind that CSS precedence will follow the standard
- * cascading order, meaning styles declared later in the document or manifest will override earlier ones,
- * depending on specificity.
- *
- * Consider organizing styles into separate files for maintainability.
- */
+:root {
+  --roma: #7a1732;
+  --roma-dark: #4f0f22;
+  --gold: #f0b323;
+  --paper: #fffaf3;
+  --ink: #25191c;
+  --muted: #75666a;
+  --line: #e7d9d4;
+  --ok: #176b45;
+  --danger: #a02626;
+  --card: #ffffff;
+}
+
+* { box-sizing: border-box; }
+body { margin: 0; font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; background: var(--paper); color: var(--ink); }
+a { color: var(--roma); text-decoration: none; }
+a:hover { text-decoration: underline; }
+.shell { width: min(1120px, calc(100% - 28px)); margin: 0 auto; }
+.site-header { background: var(--roma); color: white; border-bottom: 4px solid var(--gold); position: sticky; top: 0; z-index: 30; }
+.header-inner { min-height: 64px; display: flex; align-items: center; gap: 24px; justify-content: space-between; }
+.brand { color: white; font-weight: 800; letter-spacing: .2px; }
+.main-nav { display: flex; gap: 16px; align-items: center; flex-wrap: wrap; }
+.main-nav a { color: #fff; font-weight: 650; }
+.main-nav .admin-link { color: var(--gold); }
+.page { padding: 28px 0 56px; }
+h1, h2, h3 { line-height: 1.15; }
+h1 { margin-top: 0; font-size: clamp(1.65rem, 3vw, 2.25rem); }
+h2 { margin-top: 30px; }
+.muted { color: var(--muted); }
+.cards { display: grid; gap: 16px; }
+.card { background: var(--card); border: 1px solid var(--line); border-radius: 16px; padding: 20px; box-shadow: 0 5px 20px rgba(74, 35, 40, .06); }
+.card h2, .card h3 { margin-top: 0; }
+.card-accent { border-left: 5px solid var(--gold); }
+.grid-2 { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+.grid-3 { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
+.actions { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; margin-top: 16px; }
+.button, button, input[type="submit"] { appearance: none; border: 0; border-radius: 10px; background: var(--roma); color: white; padding: 10px 15px; font-weight: 700; cursor: pointer; font-size: .95rem; }
+.button:hover, button:hover, input[type="submit"]:hover { background: var(--roma-dark); text-decoration: none; }
+.button-secondary { background: #6d6064; }
+.button-gold { background: #9d6900; }
+.button-danger { background: var(--danger); }
+.button-small { padding: 7px 10px; font-size: .85rem; }
+form .field { margin-bottom: 16px; }
+label { display: block; font-weight: 700; margin-bottom: 6px; }
+input[type="text"], input[type="email"], input[type="password"], input[type="number"], input[type="datetime-local"], select, textarea { width: 100%; padding: 10px 12px; border: 1px solid #cdbfc1; border-radius: 10px; background: white; color: var(--ink); font: inherit; }
+textarea { min-height: 100px; resize: vertical; }
+input:focus, select:focus, textarea:focus { outline: 3px solid rgba(240,179,35,.25); border-color: var(--gold); }
+.inline-fields { display: flex; gap: 10px; align-items: end; }
+.score-fields { display: flex; align-items: center; justify-content: flex-start; gap: 10px; }
+.score-fields input { width: 84px; text-align: center; font-size: 1.15rem; }
+.check-list { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 8px; }
+.check-item { display: flex; align-items: center; gap: 8px; border: 1px solid var(--line); border-radius: 10px; padding: 9px 10px; background: #fff; }
+.check-item label { margin: 0; font-weight: 600; }
+.check-item.disabled { opacity: .45; background: #eee; }
+.alert { border-radius: 10px; padding: 12px 14px; margin-bottom: 18px; }
+.alert-success { background: #e7f5ed; color: var(--ok); border: 1px solid #bce2cc; }
+.alert-error { background: #fff0f0; color: #7d1d1d; border: 1px solid #edc1c1; }
+.badge { display: inline-flex; align-items: center; padding: 4px 8px; border-radius: 999px; background: #eee6e7; font-size: .8rem; font-weight: 700; }
+.badge-open { background: #e5f3e9; color: #185f3f; }
+.badge-gold { background: #fff1c7; color: #785300; }
+.table-wrap { overflow-x: auto; background: white; border: 1px solid var(--line); border-radius: 14px; }
+table { width: 100%; border-collapse: collapse; min-width: 640px; }
+th, td { padding: 11px 12px; text-align: left; border-bottom: 1px solid var(--line); vertical-align: top; }
+th { background: #f7efed; font-size: .88rem; }
+tr:last-child td { border-bottom: 0; }
+.stat { font-size: 1.8rem; font-weight: 800; color: var(--roma); }
+.admin-nav { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 22px; }
+.admin-nav a { background: white; border: 1px solid var(--line); padding: 8px 11px; border-radius: 9px; font-weight: 650; }
+.goal-row { display: grid; grid-template-columns: 1fr 1fr auto; gap: 10px; align-items: end; padding: 12px; border: 1px solid var(--line); border-radius: 12px; margin-bottom: 10px; }
+.details-list { display: grid; grid-template-columns: minmax(150px, .7fr) 1fr; gap: 7px 14px; }
+.details-list dt { color: var(--muted); }
+.details-list dd { margin: 0; font-weight: 650; }
+.empty { padding: 28px; text-align: center; color: var(--muted); }
+
+@media (max-width: 760px) {
+  .header-inner { align-items: flex-start; flex-direction: column; padding: 13px 0; gap: 10px; }
+  .main-nav { gap: 11px; font-size: .9rem; }
+  .page { padding-top: 20px; }
+  .grid-2, .grid-3 { grid-template-columns: 1fr; }
+  .goal-row { grid-template-columns: 1fr; }
+  .details-list { grid-template-columns: 1fr; gap: 2px; }
+  .details-list dd { margin-bottom: 9px; }
+}

@@ -1,0 +1,12 @@
+<div class="card" style="max-width:560px;margin:0 auto">
+  <h1>Регистрация</h1>
+  <%= render "shared/errors", object: @user %>
+  <%= form_with model: @user, url: registrations_path do |form| %>
+    <div class="field"><%= form.label :nickname, "Никнейм" %><%= form.text_field :nickname, required: true, maxlength: 20 %></div>
+    <div class="field"><%= form.label :email_address, "Email" %><%= form.email_field :email_address, required: true, autocomplete: "email" %></div>
+    <div class="field"><%= form.label :password, "Пароль (минимум 8 символов)" %><%= form.password_field :password, required: true, autocomplete: "new-password" %></div>
+    <div class="field"><%= form.label :password_confirmation, "Повтор пароля" %><%= form.password_field :password_confirmation, required: true, autocomplete: "new-password" %></div>
+    <%= form.submit "Создать аккаунт" %>
+  <% end %>
+  <p class="muted">Уже есть аккаунт? <%= link_to "Войти", new_session_path %></p>
+</div>

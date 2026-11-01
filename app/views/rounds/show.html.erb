@@ -1,0 +1,16 @@
+<h1>Матч №<%= @match.forecast_number %>: <%= match_title(@match) %></h1>
+<p class="muted"><%= @match.competition.name %> · <%= moscow_time(@match.kickoff_at) %></p>
+<div class="table-wrap"><table><thead><tr><th>Место</th><th>Участник</th><th>HT</th><th>FT</th><th>Голы</th><th>Ассисты</th><th>Баллы</th><th></th></tr></thead><tbody>
+<% @forecasts.each do |forecast| %>
+<tr>
+  <td><%= forecast.forecast_score&.placement || "—" %></td>
+  <td><strong><%= forecast.user.nickname %></strong></td>
+  <td><%= forecast.halftime_roma %>:<%= forecast.halftime_opponent %></td>
+  <td><%= forecast.fulltime_roma %>:<%= forecast.fulltime_opponent %></td>
+  <td><%= forecast.scorers.map(&:name).join(", ").presence || "—" %></td>
+  <td><%= forecast.forecast_assists.map { |a| a.no_assist? ? "Без ассиста" : a.player&.name }.compact.join(", ").presence || "—" %></td>
+  <td><strong><%= forecast.forecast_score&.total_points || "—" %></strong></td>
+  <td><%= link_to "Подробнее", match_forecast_path(@match, forecast) %></td>
+</tr>
+<% end %>
+</tbody></table></div>

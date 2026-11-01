@@ -1,0 +1,11 @@
+<h1>Текущая таблица</h1>
+<% if @snapshot.nil? %>
+  <div class="card empty">Подтверждённых результатов пока нет.</div>
+<% elsif @snapshot.entries.overall.exists? %>
+  <p class="muted">После матча №<%= @snapshot.match.forecast_number %></p>
+  <%= render "standing_table", title: "Общая таблица", entries: @snapshot.entries.overall.order(:rank) %>
+<% else %>
+  <p class="muted">После матча №<%= @snapshot.match.forecast_number %></p>
+  <%= render "standing_table", title: "Топ-10", entries: @snapshot.entries.top_ten.order(:rank) %>
+  <%= render "standing_table", title: "Претенденты", entries: @snapshot.entries.challenger.order(:rank) %>
+<% end %>

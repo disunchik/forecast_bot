@@ -1,0 +1,26 @@
+<%= render "shared/errors", object: match %>
+<%= form_with model: [:admin, match] do |form| %>
+  <div class="grid-2">
+    <div class="field"><%= form.label :season_id, "Сезон" %><%= form.collection_select :season_id, Season.order(created_at: :desc), :id, :name, {}, required: true %></div>
+    <div class="field"><%= form.label :competition_id, "Турнир" %><%= form.collection_select :competition_id, Competition.active, :id, :name, {}, required: true %></div>
+    <div class="field"><%= form.label :forecast_number, "Номер матча прогнозистов" %><%= form.number_field :forecast_number, min: 0, required: true %></div>
+    <div class="field"><%= form.label :opponent, "Соперник" %><%= form.text_field :opponent, required: true %></div>
+    <div class="field"><%= form.label :venue, "Где играет Рома" %><%= form.select :venue, [["Дома", "home"], ["В гостях", "away"]], {}, required: true %></div>
+    <div class="field"><%= form.label :kickoff_at, "Начало матча (МСК)" %><%= form.datetime_local_field :kickoff_at, value: match.kickoff_at&.in_time_zone("Moscow")&.strftime("%Y-%m-%dT%H:%M"), required: true %></div>
+    <div class="field"><%= form.label :status, "Статус" %><% status_options = [["Запланирован", "scheduled"], ["Перенесён", "postponed"], ["Отменён", "cancelled"]] %><% status_options << ["Завершён", "finished"] if match.match_result&.confirmed? %><%= form.select :status, status_options %></div>
+  </div>
+
+  <% question = match.temporary_question %>
+  <div class="card" style="background:#fffaf3">
+    <h3>Временный вопрос</h3>
+    <div class="check-item"><%= check_box_tag :question_enabled, "1", question.present?, id: "question_enabled" %><label for="question_enabled">Добавить временный вопрос</label></div>
+    <div class="field"><label for="question_text">Текст вопроса</label><%= text_field_tag :question_text, question&.text %></div>
+    <div class="grid-2">
+      <div class="field"><label for="question_type">Тип</label><%= select_tag :question_type, options_for_select([["Выбор из вариантов", "choice"], ["Текстовый ответ", "text"]], question&.question_type || "choice") %></div>
+      <div class="field"><label for="question_points">Баллы</label><%= number_field_tag :question_points, question&.points || 1, min: 0 %></div>
+    </div>
+    <div class="field"><label for="question_options">Варианты ответа — по одному в строке</label><%= text_area_tag :question_options, question&.options&.pluck(:text)&.join("\n"), placeholder: "Используется только для типа «Выбор из вариантов»" %></div>
+  </div>
+
+  <div class="actions"><%= form.submit match.persisted? ? "Сохранить матч" : "Создать матч" %><%= link_to "Отмена", admin_matches_path, class: "button button-secondary" %></div>
+<% end %>
