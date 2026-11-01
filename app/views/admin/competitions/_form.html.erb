@@ -1,0 +1,6 @@
+<%= render "shared/errors", object: @competition %>
+<%= form_with model: [:admin, @competition] do |form| %>
+  <div class="field"><%= form.label :name, "Название" %><%= form.text_field :name, required: true %></div>
+  <div class="check-item"><%= form.check_box :active %><%= form.label :active, "Доступен для новых матчей" %></div>
+  <div class="actions"><%= form.submit "Сохранить" %><%= link_to "Назад", admin_competitions_path %></div>
+<% end %>

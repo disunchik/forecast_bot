@@ -1,0 +1,27 @@
+<%= render "admin/nav" %><h1>Таблица сезона</h1>
+<%= render "admin/season_picker", url: admin_standings_path %>
+<% if @snapshots.any? %>
+  <%= form_with url: admin_standings_path, method: :get, class: "actions" do |form| %>
+    <%= form.hidden_field :season_id, value: @season.id %>
+    <%= form.label :snapshot_id, "Таблица после матча" %>
+    <%= form.select :snapshot_id, @snapshots.map { |s| ["№#{s.match.forecast_number}", s.id] }, selected: @snapshot&.id %>
+    <%= form.submit "Показать" %>
+  <% end %>
+<% end %>
+<% if @snapshot %>
+  <% [["Общая таблица", :overall], ["Топ-10", :top_ten], ["Претенденты", :challenger]].each do |title, group| %>
+    <% entries = @snapshot.entries.public_send(group).order(:rank) %>
+    <%= render "standings/standing_table", title: title, entries: entries if entries.exists? %>
+  <% end %>
+<% else %><p>Подтверждённых результатов пока нет.</p><% end %>
+<% if @season && @snapshots.any? %>
+  <details class="card">
+    <summary><strong>Восстановление таблиц</strong></summary>
+    <p>Обычно таблицы обновляются автоматически при подтверждении результата. Если после исправлений таблица отображается неверно, её можно заново построить из сохранённых очков подтверждённых матчей. Очки за матчи и ЗБ при этом не меняются.</p>
+    <%= form_with url: rebuild_admin_standings_path do |form| %>
+      <%= form.hidden_field :season_id, value: @season.id %>
+      <div class="field"><%= form.label :reason, "Причина" %><%= form.text_field :reason, required: true %></div>
+      <%= form.submit "Восстановить таблицы", data: { turbo_confirm: "Заново построить таблицы этого сезона из сохранённых очков?" } %>
+    <% end %>
+  </details>
+<% end %>

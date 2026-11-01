@@ -1,3 +1,3 @@
-<%= render "admin/nav" %><h1>Пользователи</h1>
+<%= render "admin/nav" %><h1>Участники прогнозов</h1>
 <div class="card"><%= form_with url: admin_users_path, method: :get do |f| %><div class="inline-fields"><div class="field" style="flex:1;margin:0"><label>Поиск по нику или email</label><%= text_field_tag :q, @query %></div><%= f.submit "Найти" %><% if @query.present? %><%= link_to "Сбросить", admin_users_path, class: "button button-secondary" %><% end %></div><% end %></div>
 <div class="table-wrap"><table><thead><tr><th>Никнейм</th><th>Email</th><th>Роль</th><th>ЗБ</th><th></th></tr></thead><tbody><% @users.each do |user| %><tr><td><strong><%= user.nickname %></strong></td><td><%= user.email_address || "—" %></td><td><%= user_role_label(user) %></td><td><%= user.gold_points_balance(active_season) %></td><td><%= link_to "Открыть", admin_user_path(user) %></td></tr><% end %></tbody></table></div>

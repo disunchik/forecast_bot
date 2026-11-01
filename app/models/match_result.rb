@@ -8,6 +8,9 @@ class MatchResult < ApplicationRecord
   enum :first_score, { roma: 0, opponent: 1, nobody: 2 }, prefix: true
   enum :state, { draft: 0, confirmed: 1 }
 
+  serialize :scoring_snapshot, coder: JSON, type: Hash
+  serialize :gold_balances_snapshot, coder: JSON, type: Hash
+
   validates :halftime_roma, :halftime_opponent, :fulltime_roma, :fulltime_opponent,
             numericality: { only_integer: true, greater_than_or_equal_to: 0 }
   validates :first_score, presence: true

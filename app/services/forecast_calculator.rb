@@ -1,7 +1,8 @@
 class ForecastCalculator
-  def initialize(forecast:, match_result:)
+  def initialize(forecast:, match_result:, rules: nil)
     @forecast = forecast
     @result = match_result
+    @rules = rules || (match_result.scoring_snapshot.presence if match_result.respond_to?(:scoring_snapshot)) || ScoringRule.snapshot
   end
 
   def calculate
@@ -20,14 +21,14 @@ class ForecastCalculator
     }
 
     base = values.values.sum
-    gold = [@forecast.gold_points_stake, (base * rule("gold_percentage", 50) / 100.0).floor].min
+    gold = [ @forecast.gold_points_stake, (base * rule("gold_percentage", 50) / 100.0).floor ].min
 
     values.merge(base_points: base, gold_points_applied: gold, total_points: base + gold)
   end
 
   private
     def rule(key, fallback)
-      ScoringRule.value_for(key, fallback)
+      @rules.fetch(key, fallback)
     end
 
     def halftime_difference_points
@@ -71,11 +72,11 @@ class ForecastCalculator
       return 0 if selected_ids.empty?
 
       unit = case selected_ids.size
-             when 1..4 then rule("scorer_1_4", 3)
-             when 5..6 then rule("scorer_5_6", 2)
-             when 7..8 then rule("scorer_7_8", 1)
-             else 0
-             end
+      when 1..4 then rule("scorer_1_4", 3)
+      when 5..6 then rule("scorer_5_6", 2)
+      when 7..8 then rule("scorer_7_8", 1)
+      else 0
+      end
       return 0 if unit.zero?
 
       actual_counts = @result.goals.where(own_goal: false).where.not(scorer_id: nil).group(:scorer_id).count
@@ -102,10 +103,10 @@ class ForecastCalculator
 
       correct = if question.choice?
                   @forecast.temporary_question_option&.correct?
-                else
+      else
                   normalized = TemporaryQuestionAcceptedAnswer.normalize(@forecast.temporary_answer_text)
                   question.accepted_answers.exists?(normalized_answer: normalized)
-                end
+      end
 
       correct ? question.points : 0
     end

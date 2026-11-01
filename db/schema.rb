@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_09_15_200000) do
+ActiveRecord::Schema[8.1].define(version: 2026_11_01_190000) do
   create_table "achievements", force: :cascade do |t|
     t.boolean "active", default: true, null: false
     t.datetime "created_at", null: false
@@ -147,9 +147,11 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_15_200000) do
     t.integer "first_score", default: 2, null: false
     t.integer "fulltime_opponent", default: 0, null: false
     t.integer "fulltime_roma", default: 0, null: false
+    t.text "gold_balances_snapshot"
     t.integer "halftime_opponent", default: 0, null: false
     t.integer "halftime_roma", default: 0, null: false
     t.integer "match_id", null: false
+    t.text "scoring_snapshot"
     t.integer "state", default: 0, null: false
     t.datetime "updated_at", null: false
     t.index ["confirmed_by_id"], name: "index_match_results_on_confirmed_by_id"

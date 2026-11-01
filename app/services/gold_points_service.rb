@@ -3,7 +3,16 @@ class GoldPointsService
 
   def self.manual!(user:, season:, amount:, note:, admin:)
     raise Error, "Нет активного сезона" unless season
+
+    SeasonTransaction.call(season) do
+      manual_transaction!(user: user, season: season, amount: amount, note: note, admin: admin)
+    end
+  end
+
+  def self.manual_transaction!(user:, season:, amount:, note:, admin:)
+    raise Error, "Нет активного сезона" unless season
     raise Error, "Укажите причину" if note.blank?
+    raise Error, "Укажите целое число" unless amount.to_s.match?(/\A-?\d+\z/)
     raise Error, "Сумма не может быть нулевой" if amount.to_i.zero?
     if amount.to_i.negative? && user.gold_points_balance(season) + amount.to_i < user.reserved_gold_points(season)
       raise Error, "Нельзя списать ЗБ, которые уже зарезервированы в открытых прогнозах"
@@ -21,17 +30,20 @@ class GoldPointsService
     transaction
   end
 
+  private_class_method :manual_transaction!
+
   def self.award_achievement!(user:, achievement:, admin:, season: Season.active.first)
     raise Error, "Нет активного сезона" unless season
-    raise Error, "Ачивка уже выдана" if user.user_achievements.exists?(achievement: achievement)
-
-    ActiveRecord::Base.transaction do
+    SeasonTransaction.call(season) do
+      achievement.reload
+      raise Error, "Ачивка недоступна для выдачи" unless achievement.active?
+      raise Error, "Ачивка уже выдана" if user.user_achievements.exists?(achievement: achievement)
       first_award = achievement.user_achievements.none?
       amount = if first_award
                  achievement.secret? ? ScoringRule.value_for("achievement_secret_first", 5) : ScoringRule.value_for("achievement_normal_first", 3)
-               else
+      else
                  ScoringRule.value_for("achievement_subsequent", 1)
-               end
+      end
 
       award = UserAchievement.create!(user: user, achievement: achievement, awarded_by: admin, awarded_at: Time.current)
       achievement.update!(revealed: true) if first_award && achievement.secret?

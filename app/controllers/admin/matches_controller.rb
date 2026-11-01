@@ -4,15 +4,16 @@ module Admin
 
     def index
       @filter = params[:filter].presence || "all"
-      matches = active_season ? active_season.matches.includes(:competition, :temporary_question, :match_result).order(forecast_number: :desc).to_a : []
+      @season = params[:season_id].present? ? Season.find(params[:season_id]) : active_season
+      matches = @season ? @season.matches.includes(:competition, :temporary_question, :match_result).order(forecast_number: :desc).to_a : []
       @matches = case @filter
-                 when "upcoming" then matches.select { |match| match.scheduled? && match.kickoff_at > Time.current }
-                 when "open" then matches.select(&:forecast_open?)
-                 when "closed" then matches.select { |match| match.forecast_closed? && !match.finished? && !match.cancelled? }
-                 when "finished" then matches.select(&:finished?)
-                 when "cancelled" then matches.select(&:cancelled?)
-                 else matches
-                 end
+      when "upcoming" then matches.select { |match| match.scheduled? && match.kickoff_at > Time.current }
+      when "open" then matches.select(&:forecast_open?)
+      when "closed" then matches.select { |match| match.forecast_closed? && !match.finished? && !match.cancelled? }
+      when "finished" then matches.select(&:finished?)
+      when "cancelled" then matches.select(&:cancelled?)
+      else matches
+      end
     end
 
     def show
@@ -41,37 +42,47 @@ module Admin
     end
 
     def update
-      old_signature = prediction_signature(@match)
       if @match.match_result&.confirmed?
         redirect_to admin_match_path(@match), alert: "Сначала откатите подтверждённый результат."
         return
       end
 
-      ActiveRecord::Base.transaction do
+      SeasonTransaction.call(@match.season) do
+        @match.reload
+        raise MatchConfirmationService::Error, "Сначала откатите подтверждённый результат" if @match.match_result&.confirmed?
+        old_signature = prediction_signature(@match)
+        old_status = @match.status
+        before = @match.attributes
         @match.update!(match_params)
         save_question!(@match)
-        if old_signature != prediction_signature(@match) && @match.forecasts.exists?
+        invalidate = !@match.cancelled? && (old_signature != prediction_signature(@match) || @match.postponed? || old_status == "cancelled")
+        if invalidate && @match.forecasts.exists?
           count = @match.forecasts.count
           @match.forecasts.destroy_all
           AuditLogger.record!(admin: current_user, action: "match.forecasts_reset", auditable: @match, details: { count: count, reason: "match_prediction_data_changed" })
         end
-        AuditLogger.record!(admin: current_user, action: "match.update", auditable: @match, details: { forecast_number: @match.forecast_number })
+        AuditLogger.record!(admin: current_user, action: "match.update", auditable: @match, details: { before: before, after: @match.attributes })
       end
       redirect_to admin_match_path(@match), notice: "Матч обновлён."
+    rescue MatchConfirmationService::Error => e
+      redirect_to admin_match_path(@match), alert: e.message
     rescue ActiveRecord::RecordInvalid => e
       @match.errors.add(:base, e.record.errors.full_messages.to_sentence) if e.record != @match
       render :edit, status: :unprocessable_entity
     end
 
     def destroy
-      if @match.forecasts.exists?
-        redirect_to admin_match_path(@match), alert: "Матч с прогнозами нельзя удалить. Используйте статус «Отменён»."
-      elsif @match.match_result&.confirmed?
-        redirect_to admin_match_path(@match), alert: "Подтверждённый матч нельзя удалить."
-      else
-        AuditLogger.record!(admin: current_user, action: "match.destroy", auditable: @match, details: { forecast_number: @match.forecast_number })
-        @match.destroy!
-        redirect_to admin_matches_path, notice: "Матч удалён."
+      SeasonTransaction.call(@match.season) do
+        @match.reload
+        if @match.forecasts.exists?
+          redirect_to admin_match_path(@match), alert: "Матч с прогнозами нельзя удалить. Используйте статус «Отменён»."
+        elsif @match.match_result&.confirmed?
+          redirect_to admin_match_path(@match), alert: "Подтверждённый матч нельзя удалить."
+        else
+          AuditLogger.record!(admin: current_user, action: "match.destroy", auditable: @match, details: { forecast_number: @match.forecast_number })
+          @match.destroy!
+          redirect_to admin_matches_path, notice: "Матч удалён."
+        end
       end
     end
 
@@ -85,6 +96,8 @@ module Admin
       end
 
       def save_question!(match)
+        return unless params.key?(:question_enabled)
+
         enabled = ActiveModel::Type::Boolean.new.cast(params[:question_enabled])
         unless enabled
           match.temporary_question&.destroy!
@@ -107,8 +120,9 @@ module Admin
             raise ActiveRecord::RecordInvalid.new(question)
           end
 
-          question.options.destroy_all
-          options.each { |text| question.options.create!(text: text) }
+          existing = question.options.index_by(&:text)
+          question.options.where.not(text: options).destroy_all
+          options.each { |text| question.options.create!(text: text) unless existing.key?(text) }
         else
           question.options.destroy_all
         end

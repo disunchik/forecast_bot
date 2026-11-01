@@ -1,0 +1,28 @@
+#!/usr/bin/env ruby
+require "bundler/setup"
+require "sqlite3"
+require "fileutils"
+require "json"
+require "digest"
+
+backup_dir, destination = ARGV
+abort "Usage: bundle exec ruby bin/restore-backup BACKUP_DIRECTORY NEW_EMPTY_DIRECTORY" unless backup_dir && destination
+backup_dir = File.realpath(backup_dir)
+destination = File.expand_path(destination)
+abort "Каталог назначения уже существует; выберите новый каталог" if File.exist?(destination)
+manifest = JSON.parse(File.read(File.join(backup_dir, "manifest.json")))
+abort "Неизвестный формат копии" unless manifest["version"] == 1 && manifest["files"].is_a?(Hash) && manifest["files"].any?
+manifest["files"].each do |name, checksum|
+  abort "Недопустимое имя файла" unless name == File.basename(name) && name.end_with?(".sqlite3")
+  file = File.join(backup_dir, name)
+  abort "Неверная контрольная сумма #{name}" unless Digest::SHA256.file(file).hexdigest == checksum
+  db = SQLite3::Database.new(file, readonly: true)
+  abort "Повреждена база #{name}" unless db.get_first_value("PRAGMA integrity_check") == "ok"
+  db.close
+end
+Dir.mkdir(destination, 0700)
+manifest["files"].each_key do |name|
+  FileUtils.copy_file(File.join(backup_dir, name), File.join(destination, name))
+  File.chmod(0600, File.join(destination, name))
+end
+puts "Копия проверена и восстановлена в #{destination}. Рабочие базы не заменялись."

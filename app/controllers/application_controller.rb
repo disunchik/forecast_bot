@@ -9,6 +9,10 @@ class ApplicationController < ActionController::Base
   helper_method :current_user, :active_season
 
   private
+    def require_html_response
+      head :not_acceptable unless request.format.html?
+    end
+
     def current_user
       Current.user
     end

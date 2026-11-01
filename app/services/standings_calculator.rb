@@ -11,7 +11,7 @@ class StandingsCalculator
     snapshot.entries.destroy_all
 
     users = participating_users
-    if @match.forecast_number <= 10
+    if confirmed_matches.length <= 10
       build_overall(snapshot, users)
     else
       build_split(snapshot, users)
@@ -22,10 +22,8 @@ class StandingsCalculator
 
   private
     def participating_users
-      User.joins(forecasts: :match)
-          .where(matches: { season_id: @season.id })
-          .where("matches.forecast_number <= ?", @match.forecast_number)
-          .where.not(matches: { status: Match.statuses[:cancelled] })
+      User.joins(:forecasts)
+          .where(forecasts: { match_id: confirmed_matches.map(&:id) })
           .distinct
           .to_a
     end
@@ -41,7 +39,7 @@ class StandingsCalculator
 
     def score_for(user, match)
       @score_cache ||= {}
-      @score_cache[[user.id, match.id]] ||= begin
+      @score_cache[[ user.id, match.id ]] ||= begin
         ForecastScore.joins(:forecast)
                      .find_by(forecasts: { user_id: user.id, match_id: match.id })
                      &.total_points.to_i
@@ -50,7 +48,7 @@ class StandingsCalculator
 
     def top_ten_points(user)
       latest_matches = confirmed_matches.last(7)
-      older_matches = confirmed_matches.first([confirmed_matches.length - latest_matches.length, 0].max)
+      older_matches = confirmed_matches.first([ confirmed_matches.length - latest_matches.length, 0 ].max)
       latest_points = latest_matches.sum { |match| score_for(user, match) }
       best_older = older_matches.map { |match| score_for(user, match) }.sort.reverse.first(3).sum
       latest_points + best_older
@@ -70,15 +68,16 @@ class StandingsCalculator
     end
 
     def last_forecast_time(user)
-      user.forecasts.joins(:match)
-          .where(matches: { season_id: @season.id })
-          .where("matches.forecast_number <= ?", @match.forecast_number)
-          .maximum(:updated_at) || Time.at(0)
+      user.forecasts.where(match_id: confirmed_matches.map(&:id)).maximum(:submitted_at) || Time.at(0)
+    end
+
+    def gold_balance(user)
+      @match.match_result.gold_balances_snapshot.fetch(user.id.to_s) { user.gold_points_balance(@season) }
     end
 
     def build_overall(snapshot, users)
       ranked = users.sort_by do |user|
-        [-top_ten_points(user), current_match_placement(user), -user.gold_points_balance(@season), last_forecast_time(user).to_f]
+        [ -top_ten_points(user), current_match_placement(user), -gold_balance(user), last_forecast_time(user).to_f, user.id ]
       end
 
       ranked.each_with_index do |user, index|
@@ -96,45 +95,45 @@ class StandingsCalculator
       previous = previous_snapshot
       previous_top_ids = if previous&.entries&.top_ten&.exists?
                            previous.entries.top_ten.order(:rank).pluck(:user_id)
-                         elsif previous
+      elsif previous
                            previous.entries.overall.order(:rank).limit(10).pluck(:user_id)
-                         else
+      else
                            users.sort_by { |u| -top_ten_points(u) }.first(10).map(&:id)
-                         end
+      end
 
       previous_top_ids &= users.map(&:id)
       previous_challengers = users.reject { |u| previous_top_ids.include?(u.id) }
       winner_id = ForecastScore.joins(:forecast).find_by(forecasts: { match_id: @match.id }, placement: 1)&.forecast&.user_id
       winner = users.find { |u| u.id == winner_id }
-      challenger_leader = previous_challengers.min_by { |u| [-challenger_points(u), current_match_placement(u), last_forecast_time(u).to_f] }
+      challenger_leader = previous_challengers.min_by { |u| [ -challenger_points(u), current_match_placement(u), last_forecast_time(u).to_f, u.id ] }
 
       newcomers = []
       newcomers << winner if winner && !previous_top_ids.include?(winner.id)
       newcomers << challenger_leader if challenger_leader && !newcomers.include?(challenger_leader)
 
       top_users = users.select { |u| previous_top_ids.include?(u.id) } + newcomers
-      slots_to_remove = [top_users.size - [10, users.size].min, 0].max
+      slots_to_remove = [ top_users.size - [ 10, users.size ].min, 0 ].max
 
       if slots_to_remove.positive?
         removable = top_users.reject { |u| newcomers.include?(u) }
         worst = removable.sort_by do |user|
-          [top_ten_points(user), -current_match_placement(user), user.gold_points_balance(@season), -last_forecast_time(user).to_f]
+          [ top_ten_points(user), -current_match_placement(user), gold_balance(user), -last_forecast_time(user).to_f, -user.id ]
         end.first(slots_to_remove)
         top_users -= worst
       end
 
-      if top_users.size < [10, users.size].min
+      if top_users.size < [ 10, users.size ].min
         extras = users.reject { |u| top_users.include?(u) }
-                      .sort_by { |u| [-challenger_points(u), current_match_placement(u), last_forecast_time(u).to_f] }
-                      .first([10, users.size].min - top_users.size)
+                      .sort_by { |u| [ -challenger_points(u), current_match_placement(u), last_forecast_time(u).to_f, u.id ] }
+                      .first([ 10, users.size ].min - top_users.size)
         top_users += extras
       end
 
       top_ranked = top_users.sort_by do |user|
-        [-top_ten_points(user), current_match_placement(user), -user.gold_points_balance(@season), last_forecast_time(user).to_f]
+        [ -top_ten_points(user), current_match_placement(user), -gold_balance(user), last_forecast_time(user).to_f, user.id ]
       end
       challengers = users.reject { |u| top_users.include?(u) }.sort_by do |user|
-        [-challenger_points(user), current_match_placement(user), last_forecast_time(user).to_f]
+        [ -challenger_points(user), current_match_placement(user), last_forecast_time(user).to_f, user.id ]
       end
 
       top_ranked.each_with_index do |user, index|

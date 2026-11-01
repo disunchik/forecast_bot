@@ -1,0 +1,47 @@
+#!/usr/bin/env ruby
+require "bundler/setup"
+require "sqlite3"
+require "fileutils"
+require "json"
+require "digest"
+require "optparse"
+require "securerandom"
+
+options = { source: File.expand_path("../storage", __dir__), environment: "development" }
+OptionParser.new do |parser|
+  parser.banner = "Usage: bundle exec ruby bin/backup --destination /private/backups [--source storage] [--environment production]"
+  parser.on("--source PATH") { |value| options[:source] = value }
+  parser.on("--destination PATH") { |value| options[:destination] = value }
+  parser.on("--environment NAME") { |value| options[:environment] = value }
+end.parse!
+abort "Укажите --destination вне каталога storage" unless options[:destination]
+abort "Неизвестное окружение" unless %w[development production test].include?(options[:environment])
+source = File.realpath(options[:source])
+destination = File.expand_path(options[:destination])
+FileUtils.mkdir_p(destination, mode: 0700)
+destination = File.realpath(destination)
+abort "Копию нельзя размещать внутри storage" if destination == source || destination.start_with?(source + File::SEPARATOR)
+files = Dir.glob(File.join(source, "#{options[:environment]}*.sqlite3"))
+abort "Базы указанного окружения не найдены" if files.empty?
+output = File.join(destination, "#{options[:environment]}-#{Time.now.utc.strftime('%Y%m%dT%H%M%SZ')}-#{SecureRandom.hex(4)}")
+Dir.mkdir(output, 0700)
+manifest = { "version" => 1, "environment" => options[:environment], "files" => {} }
+files.each do |path|
+  input = SQLite3::Database.new(path, readonly: true)
+  target = File.join(output, File.basename(path))
+  copy = SQLite3::Database.new(target)
+  backup = SQLite3::Backup.new(copy, "main", input, "main")
+  begin
+    result = backup.step(-1)
+    abort "SQLite не завершил копирование #{File.basename(path)}" unless result == SQLite3::Constants::ErrorCode::DONE
+  ensure
+    backup.finish
+    input.close
+  end
+  abort "Ошибка проверки #{File.basename(path)}" unless copy.get_first_value("PRAGMA integrity_check") == "ok"
+  copy.close
+  File.chmod(0600, target)
+  manifest["files"][File.basename(path)] = Digest::SHA256.file(target).hexdigest
+end
+File.write(File.join(output, "manifest.json"), JSON.pretty_generate(manifest), perm: 0600)
+puts output

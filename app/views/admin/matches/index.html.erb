@@ -1,12 +1,13 @@
+<%= render "admin/season_picker", url: admin_matches_path %>
 <%= render "admin/nav" %>
 <div class="actions" style="justify-content:space-between"><h1>Матчи</h1><%= link_to "Создать матч", new_admin_match_path, class: "button" %></div>
 <nav class="admin-nav">
-  <%= link_to "Все", admin_matches_path(filter: "all") %>
-  <%= link_to "Будущие", admin_matches_path(filter: "upcoming") %>
-  <%= link_to "Открытые", admin_matches_path(filter: "open") %>
-  <%= link_to "Закрытые", admin_matches_path(filter: "closed") %>
-  <%= link_to "Завершённые", admin_matches_path(filter: "finished") %>
-  <%= link_to "Отменённые", admin_matches_path(filter: "cancelled") %>
+  <%= link_to "Все", admin_matches_path(season_id: @season&.id, filter: "all") %>
+  <%= link_to "Будущие", admin_matches_path(season_id: @season&.id, filter: "upcoming") %>
+  <%= link_to "Открытые", admin_matches_path(season_id: @season&.id, filter: "open") %>
+  <%= link_to "Закрытые", admin_matches_path(season_id: @season&.id, filter: "closed") %>
+  <%= link_to "Завершённые", admin_matches_path(season_id: @season&.id, filter: "finished") %>
+  <%= link_to "Отменённые", admin_matches_path(season_id: @season&.id, filter: "cancelled") %>
 </nav>
 <div class="table-wrap"><table><thead><tr><th>№</th><th>Матч</th><th>Турнир</th><th>Начало</th><th>Статус</th><th>Прогнозов</th><th></th></tr></thead><tbody>
 <% @matches.each do |match| %><tr><td><%= match.forecast_number %></td><td><strong><%= match_title(match) %></strong></td><td><%= match.competition.name %></td><td><%= moscow_time(match.kickoff_at) %></td><td><%= match_status_label(match) %></td><td><%= match.forecasts.count %></td><td><%= link_to "Открыть", admin_match_path(match) %></td></tr><% end %>

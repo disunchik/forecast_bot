@@ -10,45 +10,60 @@ class MatchConfirmationService
   end
 
   def preview
-    ranked_rows.map do |row|
-      row.merge(placement: row[:placement])
-    end
+    validate_result!
+    ranked_rows
   end
 
   def confirm!
-    raise Error, "Результат уже подтверждён" if match_result.confirmed?
-    raise Error, "Отменённый матч нельзя рассчитывать" if @match.cancelled?
-    raise Error, "Количество голов Ромы не совпадает с итоговым счётом" if match_result.goals.size != match_result.fulltime_roma
-    if @match.season.matches.where("forecast_number < ?", @match.forecast_number).where.not(status: [:finished, :cancelled]).exists?
-      raise Error, "Сначала подтвердите или отмените более ранние матчи сезона"
-    end
-
-    ActiveRecord::Base.transaction do
+    SeasonTransaction.call(@match.season) do
+      match_result.reload
+      @match.reload
+      validate_result!
+      raise Error, "Результат уже подтверждён" if match_result.confirmed?
+      match_result.scoring_snapshot = ScoringRule.snapshot if match_result.scoring_snapshot.blank?
       rows = ranked_rows
-      rows.each do |row|
-        forecast = row[:forecast]
-        if forecast.gold_points_stake > forecast.user.gold_points_balance(@match.season)
-          raise Error, "У #{forecast.user.nickname} недостаточно ЗБ для зарезервированной ставки. Исправьте баланс перед подтверждением."
-        end
-      end
+      ensure_balances!
       persist_scores!(rows)
       spend_stakes!(rows)
       award_placement_gold!(rows)
 
       match_result.update!(state: :confirmed, confirmed_by: @admin, confirmed_at: Time.current)
       @match.update!(status: :finished)
+      ensure_balances!
+      balances = User.joins(:forecasts).where(forecasts: { match_id: @match.season.matches.select(:id) }).distinct.to_h do |user|
+        [ user.id.to_s, user.gold_points_balance(@match.season) ]
+      end
+      match_result.update!(gold_balances_snapshot: balances)
       StandingsCalculator.new(match: @match).rebuild_snapshot!
 
-      AuditLogger.record!(
-        admin: @admin,
-        action: "match_result.confirm",
-        auditable: match_result,
-        details: { match_id: @match.id, forecast_number: @match.forecast_number }
-      )
+      AuditLogger.record!(admin: @admin, action: "match_result.confirm", auditable: match_result,
+                          details: { match_id: @match.id, forecast_number: @match.forecast_number, rules: match_result.scoring_snapshot })
     end
   end
 
   private
+    def validate_result!
+      raise Error, "Дождитесь закрытия приёма прогнозов" if Time.current < @match.forecast_closes_at
+      raise Error, "Перенесённый матч нельзя рассчитывать" if @match.postponed?
+      raise Error, "Отменённый матч нельзя рассчитывать" if @match.cancelled?
+      raise ActiveRecord::RecordInvalid, match_result unless match_result.valid?
+      if match_result.goals.size != match_result.fulltime_roma
+        raise Error, "Количество голов Ромы не совпадает с итоговым счётом"
+      end
+      if @match.season.matches.where("forecast_number < ?", @match.forecast_number).where.not(status: [ :finished, :cancelled ]).exists?
+        raise Error, "Сначала подтвердите или отмените более ранние матчи сезона"
+      end
+    end
+
+    def ensure_balances!
+      @match.forecasts.includes(:user).each do |forecast|
+        user = forecast.user
+        if user.gold_points_balance(@match.season) < user.reserved_gold_points(@match.season)
+          raise Error, "У #{user.nickname} недостаточно ЗБ для ставок. Изменения отменены."
+        end
+      end
+    end
+
     def ranked_rows
       rows = @match.forecasts.includes(:user, :scorers, :forecast_assists).map do |forecast|
         { forecast: forecast, values: ForecastCalculator.new(forecast: forecast, match_result: match_result).calculate }
@@ -66,7 +81,8 @@ class MatchConfirmationService
           -v[:scorer_points],
           -v[:assist_points],
           -v[:temporary_question_points],
-          f.updated_at.to_f
+          f.submitted_at.to_f,
+          f.id
         ]
       end
 
@@ -109,9 +125,9 @@ class MatchConfirmationService
       GoldPointTransaction.where(match: @match, kind: :placement).destroy_all
 
       rewards = {
-        1 => ScoringRule.value_for("placement_first", 3),
-        2 => ScoringRule.value_for("placement_second", 2),
-        3 => ScoringRule.value_for("placement_third", 1)
+        1 => match_result.scoring_snapshot.fetch("placement_first", 3),
+        2 => match_result.scoring_snapshot.fetch("placement_second", 2),
+        3 => match_result.scoring_snapshot.fetch("placement_third", 1)
       }
 
       rows.first(3).each do |row|

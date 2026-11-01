@@ -34,7 +34,7 @@ class Match < ApplicationRecord
   end
 
   def predictions_visible_to_all?(at: Time.current)
-    at >= forecast_closes_at || cancelled? || finished?
+    at >= forecast_closes_at || finished?
   end
 
   def roma_name

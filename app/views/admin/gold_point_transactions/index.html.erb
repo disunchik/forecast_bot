@@ -1,0 +1,10 @@
+<%= render "admin/nav" %><h1>Золотые баллы</h1>
+<%= render "admin/season_picker", url: admin_gold_point_transactions_path %>
+<p>Для ручной корректировки откройте профиль участника.</p>
+<div class="table-wrap"><table><thead><tr><th>Участник</th><th>Баланс</th><th>Доступно</th></tr></thead><tbody>
+<% @users.each do |user| %><tr><td><%= link_to user.nickname, admin_user_path(user) %></td><td><%= user.gold_points_balance(@season) %></td><td><%= user.available_gold_points(@season) %></td></tr><% end %>
+</tbody></table></div>
+<h2>Журнал сезона</h2>
+<div class="table-wrap"><table><thead><tr><th>Дата</th><th>Участник</th><th>Сумма</th><th>Основание</th></tr></thead><tbody>
+<% @transactions.each do |tx| %><tr><td><%= moscow_time(tx.created_at) %></td><td><%= tx.user.nickname %></td><td><%= tx.amount %></td><td><%= tx.note %></td></tr><% end %>
+</tbody></table></div>

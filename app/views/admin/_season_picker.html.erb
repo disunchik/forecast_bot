@@ -1,0 +1,5 @@
+<%= form_with url: url, method: :get, class: "actions" do |form| %>
+  <%= form.label :season_id, "Сезон" %>
+  <%= form.collection_select :season_id, Season.order(created_at: :desc), :id, :name, selected: @season&.id %>
+  <%= form.submit "Показать" %>
+<% end %>

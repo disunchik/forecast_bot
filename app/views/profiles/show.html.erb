@@ -38,6 +38,7 @@
 <% @forecasts.each do |forecast| %>
   <div class="card"><strong>№<%= forecast.match.forecast_number %> · <%= match_title(forecast.match) %></strong><br>HT <%= forecast.halftime_roma %>:<%= forecast.halftime_opponent %> · FT <%= forecast.fulltime_roma %>:<%= forecast.fulltime_opponent %>
   <% if forecast.forecast_score %><br><span class="badge badge-gold"><%= forecast.forecast_score.total_points %> баллов</span><% end %>
+  <div class="actions"><%= link_to "Посмотреть прогноз", match_forecast_path(forecast.match, forecast), class: "button button-small" %></div>
   </div>
 <% end %>
 </div>

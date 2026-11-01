@@ -1,5 +1,11 @@
 module Admin
   class GoldPointTransactionsController < BaseController
+    def index
+      @season = params[:season_id].present? ? Season.find(params[:season_id]) : active_season
+      @users = User.order(:nickname)
+      @transactions = @season ? GoldPointTransaction.where(season: @season).includes(:user).order(created_at: :desc) : GoldPointTransaction.none
+    end
+
     def create
       user = User.find(params[:user_id])
       GoldPointsService.manual!(

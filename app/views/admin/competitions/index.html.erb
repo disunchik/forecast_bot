@@ -1,0 +1,12 @@
+<%= render "admin/nav" %>
+<h1>Турниры</h1>
+<div class="actions page-actions">
+  <%= link_to "Добавить турнир", new_admin_competition_path, class: "button" %>
+</div>
+<div class="cards">
+  <% @competitions.each do |competition| %>
+    <div class="card"><strong><%= competition.name %></strong> · <%= competition.active? ? "Активный" : "В архиве" %>
+      <%= link_to "Редактировать", edit_admin_competition_path(competition) %>
+    </div>
+  <% end %>
+</div>

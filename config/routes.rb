@@ -3,7 +3,7 @@ Rails.application.routes.draw do
   resources :registrations, only: %i[new create]
   resource :legacy_setup, only: %i[edit update]
   resource :profile, only: %i[show edit update]
-  resources :passwords, param: :token
+  resources :passwords, param: :token, only: %i[new create edit update]
 
   resources :matches, only: [] do
     resources :forecasts, only: %i[new create show edit update]
@@ -13,13 +13,19 @@ Rails.application.routes.draw do
 
   namespace :admin do
     root "dashboard#index"
+    resources :competitions, except: %i[show destroy]
+    resources :results, only: :index
+    resources :gold_point_transactions, only: :index
+    resource :standings, only: :show do
+      post :rebuild
+    end
     resources :matches do
       resource :result, controller: "match_results", only: %i[edit update] do
-        post :preview
+        match :preview, via: %i[get post]
         post :confirm
       end
     end
-    resources :players do
+    resources :players, except: :show do
       member do
         patch :archive
         patch :restore
@@ -28,7 +34,7 @@ Rails.application.routes.draw do
     resources :users, only: %i[index show edit update] do
       resources :gold_point_transactions, only: :create
     end
-    resources :achievements do
+    resources :achievements, except: :show do
       member { post :award }
     end
     resources :scoring_rules, only: %i[index update]

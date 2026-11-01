@@ -25,15 +25,19 @@ module Admin
 
     def activate
       ActiveRecord::Base.transaction do
-        Season.update_all(active: false)
+        Season.where.not(id: @season.id).update_all(active: false)
         @season.update!(active: true)
       end
       redirect_to admin_seasons_path, notice: "Активный сезон изменён."
     end
 
     def rollback
-      MatchRollbackService.new(season: @season, keep_through_number: params[:keep_through_number], admin: current_user).call!
-      redirect_to admin_season_path(@season), notice: "Результаты после матча №#{params[:keep_through_number]} откатились."
+      number = params[:before_first] == "1" ? (@season.matches.minimum(:forecast_number) || 1) - 1 : params[:keep_through_number]
+      MatchRollbackService.new(season: @season, keep_through_number: number, admin: current_user).call!
+      notice = params[:before_first] == "1" ? "Все результаты сезона откатились." : "Результаты после матча №#{number} откатились."
+      redirect_to admin_season_path(@season), notice: notice
+    rescue MatchRollbackService::Error, ArgumentError => e
+      redirect_to admin_season_path(@season), alert: e.message
     end
 
     private

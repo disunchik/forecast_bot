@@ -23,7 +23,13 @@ module Admin
       attrs = user_params.to_h
       attrs.delete("password") if attrs["password"].blank?
       attrs.delete("password_confirmation") if attrs["password_confirmation"].blank?
-      new_role = attrs["role"]
+      new_role = params.require(:user)[:role].presence
+      if new_role && !User.roles.key?(new_role)
+        @user.errors.add(:role, "неизвестная роль")
+        render :edit, status: :unprocessable_entity
+        return
+      end
+      attrs["role"] = new_role if new_role
 
       if @user.admin? && new_role == "user" && User.admin.count == 1
         @user.errors.add(:role, "нельзя снять роль у последнего администратора")
@@ -32,16 +38,18 @@ module Admin
       end
 
       before = @user.slice(:nickname, :email_address, :role)
-      if @user.update(attrs)
-        if attrs.key?("password")
-          scope = @user.sessions
-          scope = scope.where.not(id: Current.session.id) if @user == current_user
-          scope.destroy_all
+      User.transaction do
+        if @user.update(attrs)
+          if attrs.key?("password")
+            scope = @user.sessions
+            scope = scope.where.not(id: Current.session.id) if @user == current_user
+            scope.destroy_all
+          end
+          AuditLogger.record!(admin: current_user, action: "user.update", auditable: @user, details: { before: before, after: @user.slice(:nickname, :email_address, :role), password_reset: attrs.key?("password") })
+          redirect_to admin_user_path(@user), notice: "Пользователь обновлён."
+        else
+          render :edit, status: :unprocessable_entity
         end
-        AuditLogger.record!(admin: current_user, action: "user.update", auditable: @user, details: { before: before, after: @user.slice(:nickname, :email_address, :role), password_reset: attrs.key?("password") })
-        redirect_to admin_user_path(@user), notice: "Пользователь обновлён."
-      else
-        render :edit, status: :unprocessable_entity
       end
     end
 
@@ -51,7 +59,7 @@ module Admin
       end
 
       def user_params
-        params.require(:user).permit(:nickname, :email_address, :role, :password, :password_confirmation)
+        params.require(:user).permit(:nickname, :email_address, :password, :password_confirmation)
       end
   end
 end
