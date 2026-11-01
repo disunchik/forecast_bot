@@ -10,7 +10,8 @@ class PredictionWorkflowTest < ApplicationSystemTestCase
     fill_in "Никнейм", with: user.nickname
     fill_in "Пароль", with: "password"
     click_button "Войти"
-    assert_text "Главная"
+    assert_current_path root_path
+    assert_selector "nav", text: "Главная"
   end
 
   test "mobile user submits edits and views full saved forecast" do
@@ -58,9 +59,12 @@ class PredictionWorkflowTest < ApplicationSystemTestCase
     assert_text "Результат подтверждён"
     visit profile_path
     click_button "Выйти"
+    assert_current_path new_session_path
     login(@user)
     click_link "Профиль", exact: true
+    assert_current_path profile_path
     click_link "Посмотреть прогноз"
+    assert_current_path match_forecast_path(@match, @user.forecasts.find_by!(match: @match))
     assert_text "Расчёт"
     assert_text "Место: 1"
     assert_text "ЗБ применено"

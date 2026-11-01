@@ -34,7 +34,14 @@ class MatchConfirmationService
         [ user.id.to_s, user.gold_points_balance(@match.season) ]
       end
       match_result.update!(gold_balances_snapshot: balances)
-      StandingsCalculator.new(match: @match).rebuild_snapshot!
+      # A postponed earlier match can be confirmed after later ones. Rebuild the
+      # derived tables in season-number order without touching their paid gold.
+      @match.season.matches.joins(:match_result)
+            .where(match_results: { state: :confirmed })
+            .where("matches.forecast_number >= ?", @match.forecast_number)
+            .order(:forecast_number).each do |match|
+        StandingsCalculator.new(match: match).rebuild_snapshot!
+      end
 
       AuditLogger.record!(admin: @admin, action: "match_result.confirm", auditable: match_result,
                           details: { match_id: @match.id, forecast_number: @match.forecast_number, rules: match_result.scoring_snapshot })
@@ -50,7 +57,7 @@ class MatchConfirmationService
       if match_result.goals.size != match_result.fulltime_roma
         raise Error, "Количество голов Ромы не совпадает с итоговым счётом"
       end
-      if @match.season.matches.where("forecast_number < ?", @match.forecast_number).where.not(status: [ :finished, :cancelled ]).exists?
+      if @match.season.matches.where("forecast_number < ?", @match.forecast_number).where.not(status: [ :finished, :cancelled, :postponed ]).exists?
         raise Error, "Сначала подтвердите или отмените более ранние матчи сезона"
       end
     end
@@ -122,8 +129,6 @@ class MatchConfirmationService
     end
 
     def award_placement_gold!(rows)
-      GoldPointTransaction.where(match: @match, kind: :placement).destroy_all
-
       rewards = {
         1 => match_result.scoring_snapshot.fetch("placement_first", 3),
         2 => match_result.scoring_snapshot.fetch("placement_second", 2),
@@ -133,8 +138,11 @@ class MatchConfirmationService
       rows.first(3).each do |row|
         next unless row[:values][:total_points].positive?
 
-        amount = rewards[row[:placement]].to_i
-        next if amount.zero?
+        # Previously granted gold is protected from administrative corrections.
+        # Pay only an increase; repeat confirmations must not pay it again.
+        already_paid = GoldPointTransaction.placement.where(match: @match, user: row[:forecast].user).sum(:amount)
+        amount = rewards[row[:placement]].to_i - already_paid
+        next unless amount.positive?
 
         GoldPointTransaction.create!(
           user: row[:forecast].user,
@@ -142,7 +150,7 @@ class MatchConfirmationService
           match: @match,
           kind: :placement,
           amount: amount,
-          note: "#{row[:placement]} место в матче №#{@match.forecast_number}"
+          note: "#{already_paid.positive? ? 'Доплата за ' : ''}#{row[:placement]} место в матче №#{@match.forecast_number}"
         )
       end
     end

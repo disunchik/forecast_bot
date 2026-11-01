@@ -1,6 +1,12 @@
 # Omakase Ruby styling for Rails
 inherit_gem: { rubocop-rails-omakase: rubocop.yml }
 
+# Applied migrations are immutable (AGENTS.md). Keep this existing formatting
+# debt local to one cop and one migration; all other code remains checked.
+Layout/SpaceInsideArrayLiteralBrackets:
+  Exclude:
+    - db/migrate/20260915200000_create_forecast_domain.rb
+
 # Overwrite or add rules to create your own house style
 #
 # # Use `[a, [b, c]]` not `[ a, [ b, c ] ]`

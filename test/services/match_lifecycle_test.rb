@@ -51,26 +51,112 @@ class MatchLifecycleTest < ActiveSupport::TestCase
     MatchRollbackService.new(season: @season, keep_through_number: 0, admin: @admin).call!
     assert forecast.reload
     assert result.reload.draft?
-    assert_equal 0, @user.gold_points_balance(@season)
+    assert_equal 3, @user.gold_points_balance(@season)
     MatchConfirmationService.new(match_result: result, admin: @admin).confirm!
     assert_equal 3, @user.gold_points_balance(@season)
     assert_equal 1, forecast.reload.forecast_score.placement
     assert_equal 1, GoldPointTransaction.placement.where(match: @match).count
   end
 
-  test "rollback with unbacked remaining reservations is atomic" do
+  test "rollback preserves gold backing accepted stakes and recalculation can finish" do
     @match.update!(kickoff_at: 1.day.ago)
     make_forecast
     result = draft_result
     MatchConfirmationService.new(match_result: result, admin: @admin).confirm!
-    make_forecast(match: make_match, gold_points_stake: 3)
-    assert_raises(MatchRollbackService::Error) do
+    later = make_match
+    forecast = make_forecast(match: later, gold_points_stake: 3, halftime_roma: 1,
+                             halftime_opponent: 0, fulltime_roma: 2, fulltime_opponent: 1, first_score: :roma)
+    2.times do
       MatchRollbackService.new(season: @season, keep_through_number: 0, admin: @admin).call!
+      assert result.reload.draft?
+      assert_equal 3, @user.gold_points_balance(@season)
+      assert_equal 3, @user.reserved_gold_points(@season)
+      assert_equal 3, forecast.reload.gold_points_stake
+      assert_empty @season.standing_snapshots
+      MatchConfirmationService.new(match_result: result, admin: @admin).confirm!
     end
-    assert result.reload.confirmed?
+    later.update!(kickoff_at: 1.day.ago)
+    MatchConfirmationService.new(match_result: draft_result(match: later), admin: @admin).confirm!
+    assert_equal 0, @user.gold_points_balance(@season)
+    assert_equal 0, @user.reserved_gold_points(@season)
+    assert_equal(-3, GoldPointTransaction.stake.where(match: later).sum(:amount))
+    assert_equal 1, GoldPointTransaction.placement.where(match: @match, user: @user).count
+  end
+
+  test "correction keeps previous reward and only pays increases to new winners" do
+    @match.update!(kickoff_at: 1.day.ago)
+    make_forecast
+    make_forecast(user: @other_user, fulltime_opponent: 1, first_score: :opponent)
+    result = draft_result
+    MatchConfirmationService.new(match_result: result, admin: @admin).confirm!
+    assert_equal 3, @user.gold_points_balance(@season)
+    assert_equal 2, @other_user.gold_points_balance(@season)
+    2.times do
+      MatchRollbackService.new(season: @season, keep_through_number: 0, admin: @admin).call!
+      result.reload.update!(fulltime_opponent: 1, first_score: :opponent)
+      MatchConfirmationService.new(match_result: result, admin: @admin).confirm!
+      assert_equal 3, @user.gold_points_balance(@season)
+      assert_equal 3, @other_user.gold_points_balance(@season)
+      assert_equal 1, @other_user.forecasts.find_by!(match: @match).forecast_score.placement
+    end
+    assert_equal [ 2, 1 ], GoldPointTransaction.placement.where(match: @match, user: @other_user).order(:id).pluck(:amount)
+  end
+
+  test "zero corrected score does not reclaim a reward backing a later bet" do
+    @match.update!(kickoff_at: 1.day.ago)
+    forecast = make_forecast(fulltime_opponent: 1, first_score: :opponent)
+    result = draft_result(fulltime_opponent: 1, first_score: :opponent)
+    MatchConfirmationService.new(match_result: result, admin: @admin).confirm!
+    later = make_forecast(match: make_match, gold_points_stake: 3)
+    MatchRollbackService.new(season: @season, keep_through_number: 0, admin: @admin).call!
+    result.reload.update!(halftime_roma: 1, fulltime_roma: 2, fulltime_opponent: 0, first_score: :roma)
+    2.times { |position| result.goals.create!(own_goal: true, position: position) }
+    MatchConfirmationService.new(match_result: result, admin: @admin).confirm!
+    assert_equal 0, forecast.reload.forecast_score.total_points
     assert_equal 3, @user.gold_points_balance(@season)
     assert_equal 3, @user.reserved_gold_points(@season)
-    assert_equal 1, StandingSnapshot.count
+    assert_equal 3, later.reload.gold_points_stake
+    assert_equal 3, GoldPointTransaction.placement.where(match: @match, user: @user).sum(:amount)
+  end
+
+  test "postponed earlier match does not block later result and later tables are rebuilt" do
+    @match.update!(forecast_number: 5, status: :postponed)
+    later = make_match(number: 6, kickoff: 1.day.ago)
+    make_forecast(match: later)
+    later_result = draft_result(match: later)
+    MatchConfirmationService.new(match_result: later_result, admin: @admin).confirm!
+    assert_equal 18, later.reload.standing_snapshot.entries.find_by!(user: @user).points
+    paid_gold = GoldPointTransaction.where(match: later).order(:id).pluck(:id, :amount)
+    scores = later_result.forecast_scores.pluck(:id, :total_points)
+    @match.update!(status: :scheduled, kickoff_at: 1.day.ago)
+    make_forecast
+    MatchConfirmationService.new(match_result: draft_result, admin: @admin).confirm!
+    assert_equal 36, later.standing_snapshot.entries.find_by!(user: @user).points
+    assert_equal 18, @match.reload.standing_snapshot.entries.find_by!(user: @user).points
+    assert_equal paid_gold, GoldPointTransaction.where(match: later).order(:id).pluck(:id, :amount)
+    assert_equal scores, later_result.forecast_scores.pluck(:id, :total_points)
+    assert_equal 6, @user.gold_points_balance(@season)
+  end
+
+  test "postponed match itself cannot be confirmed" do
+    @match.update!(status: :postponed, kickoff_at: 1.day.ago)
+    assert_raises(MatchConfirmationService::Error) do
+      MatchConfirmationService.new(match_result: draft_result, admin: @admin).confirm!
+    end
+    assert_empty ForecastScore.all
+  end
+
+  test "cup result drawn after extra time awards draw outcome" do
+    @match.update!(kickoff_at: 1.day.ago)
+    forecast = make_forecast(fulltime_roma: 1, fulltime_opponent: 1, first_score: :roma)
+    result = draft_result(fulltime_roma: 1, fulltime_opponent: 1, first_score: :roma)
+    result.goals.create!(position: 1, own_goal: true)
+    MatchConfirmationService.new(match_result: result, admin: @admin).confirm!
+    score = forecast.reload.forecast_score
+    assert_equal 2, score.outcome_points
+    assert_equal 4, score.fulltime_exact_points
+    assert_equal 4, score.fulltime_difference_points
+    assert_equal 1, result.goals.count
   end
 
   test "saved rules survive edits and rollback" do
@@ -134,7 +220,7 @@ class MatchLifecycleTest < ActiveSupport::TestCase
     results << draft_result(match: second)
     MatchConfirmationService.new(match_result: results.last, admin: @admin).confirm!
     MatchRollbackService.new(season: @season, keep_through_number: 0, admin: @admin).call!
-    assert_equal 23, @user.gold_points_balance(@season)
+    assert_equal 29, @user.gold_points_balance(@season)
     assert @user.achievements.exists?(achievement.id)
     forecasts.each { |forecast| assert Forecast.exists?(forecast.id) }
     results.each { |result| assert result.reload.draft? }

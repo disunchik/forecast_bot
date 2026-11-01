@@ -36,16 +36,16 @@ module ApplicationHelper
     return [] unless score
 
     [
-      ["Счёт матча", score.fulltime_points],
-      ["Счёт первого тайма", score.halftime_points],
-      ["Исход", score.outcome_points],
-      ["Рома без голов", score.roma_no_goal_points],
-      ["0:0", score.nil_nil_points],
-      ["Первый гол", score.first_score_points],
-      ["Авторы голов", score.scorer_points],
-      ["Ассисты", score.assist_points],
-      ["Временный вопрос", score.temporary_question_points],
-      ["ЗБ применено", score.gold_points_applied]
+      [ "Счёт матча", score.fulltime_points ],
+      [ "Счёт первого тайма", score.halftime_points ],
+      [ "Исход", score.outcome_points ],
+      [ "Рома без голов", score.roma_no_goal_points ],
+      [ "0:0", score.nil_nil_points ],
+      [ "Первый гол", score.first_score_points ],
+      [ "Авторы голов", score.scorer_points ],
+      [ "Ассисты", score.assist_points ],
+      [ "Временный вопрос", score.temporary_question_points ],
+      [ "ЗБ применено", score.gold_points_applied ]
     ]
   end
 end

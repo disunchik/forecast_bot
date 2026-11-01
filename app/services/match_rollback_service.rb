@@ -15,7 +15,8 @@ class MatchRollbackService
         result = match.match_result
         next unless result&.confirmed?
 
-        GoldPointTransaction.where(match: match, kind: [ :stake, :placement ]).destroy_all
+        # Return stakes to reserves, keeping already granted placement rewards.
+        GoldPointTransaction.where(match: match, kind: :stake).destroy_all
         result.forecast_scores.destroy_all
         result.update!(state: :draft, confirmed_by: nil, confirmed_at: nil)
         match.update!(status: :scheduled) if match.finished?
@@ -26,13 +27,8 @@ class MatchRollbackService
                       .where("matches.forecast_number > ?", @keep_through_number)
                       .destroy_all
 
-      User.joins(:forecasts).where(forecasts: { match_id: @season.matches.select(:id) }).distinct.each do |user|
-        if user.gold_points_balance(@season) < user.reserved_gold_points(@season)
-          raise Error, "Откат оставит у #{user.nickname} недостаточно ЗБ для сохранённых ставок. Откат полностью отменён; сначала восстановите обеспечение ставок."
-        end
-      end
-
-      AuditLogger.record!(admin: @admin, action: "season.rollback", auditable: @season, details: { keep_through_number: @keep_through_number })
+      AuditLogger.record!(admin: @admin, action: "season.rollback", auditable: @season,
+                          details: { keep_through_number: @keep_through_number, placement_gold_preserved: true })
     end
   end
 end

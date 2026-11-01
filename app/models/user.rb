@@ -50,7 +50,7 @@ class User < ApplicationRecord
   end
 
   def available_gold_points(season = Season.active.first)
-    [gold_points_balance(season) - reserved_gold_points(season), 0].max
+    [ gold_points_balance(season) - reserved_gold_points(season), 0 ].max
   end
 
   def self.nickname_key_for(value)

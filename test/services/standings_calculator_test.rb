@@ -88,4 +88,42 @@ class StandingsCalculatorTest < ActiveSupport::TestCase
     assert snapshot.entries.top_ten.exists?(user: leader)
     assert_equal 2, previous_top.count { |id| !snapshot.entries.top_ten.exists?(user_id: id) }
   end
+  test "challenger promotion and ranking use saved gold before forecast time" do
+    @match.destroy!
+    participants = [ @user, @other_user, @admin ] + 10.times.map do |i|
+      User.create!(nickname: "GoldTie#{i}", email_address: "goldtie#{i}@example.com", password: "password", password_confirmation: "password")
+    end
+    top = participants.first(10)
+    low, high, empty = participants.last(3)
+    10.times do |i|
+      record_match(i + 1, top.map { |user| [ user, 20 ] } + [ [ low, 0 ], [ high, 0 ], [ empty, 0 ] ])
+    end
+    low.forecasts.update_all(submitted_at: 2.hours.ago)
+    high.forecasts.update_all(submitted_at: 1.hour.ago)
+    empty.forecasts.update_all(submitted_at: 3.hours.ago)
+    fund(user: low, amount: 5)
+    fund(user: high, amount: 10)
+    snapshot = record_match(11, top.map { |user| [ user, 20 ] })
+    snapshot.match.match_result.update!(gold_balances_snapshot: { low.id.to_s => 5, high.id.to_s => 10, empty.id.to_s => 0 })
+    assert snapshot.entries.top_ten.exists?(user: high)
+    assert snapshot.entries.challenger.exists?(user: low)
+    assert_operator snapshot.entries.find_by!(user: low).rank, :<, snapshot.entries.find_by!(user: empty).rank
+    ranking = snapshot.entries.order(:group_name, :rank).pluck(:user_id)
+    fund(user: empty, amount: 100)
+    rebuilt = StandingsCalculator.new(match: snapshot.match).rebuild_snapshot!
+    assert_equal ranking, rebuilt.entries.order(:group_name, :rank).pluck(:user_id)
+  end
+
+  test "late postponed result rebuilds the first split at eleven confirmed matches" do
+    @match.update!(forecast_number: 5, status: :postponed)
+    ([ 1, 2, 3, 4 ] + (6..11).to_a).each { |number| record_match(number, [ [ @user, 1 ] ]) }
+    latest = @season.matches.find_by!(forecast_number: 11)
+    assert latest.standing_snapshot.entries.overall.exists?
+    @match.update!(status: :scheduled, kickoff_at: 1.day.ago)
+    make_forecast
+    MatchConfirmationService.new(match_result: draft_result, admin: @admin).confirm!
+    assert latest.reload.standing_snapshot.entries.top_ten.exists?
+    assert_equal 27, latest.standing_snapshot.entries.find_by!(user: @user).points
+    assert_equal 11, @season.standing_snapshots.count
+  end
 end

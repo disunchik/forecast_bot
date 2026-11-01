@@ -105,7 +105,7 @@ class StandingsCalculator
       previous_challengers = users.reject { |u| previous_top_ids.include?(u.id) }
       winner_id = ForecastScore.joins(:forecast).find_by(forecasts: { match_id: @match.id }, placement: 1)&.forecast&.user_id
       winner = users.find { |u| u.id == winner_id }
-      challenger_leader = previous_challengers.min_by { |u| [ -challenger_points(u), current_match_placement(u), last_forecast_time(u).to_f, u.id ] }
+      challenger_leader = previous_challengers.min_by { |u| [ -challenger_points(u), current_match_placement(u), -gold_balance(u), last_forecast_time(u).to_f, u.id ] }
 
       newcomers = []
       newcomers << winner if winner && !previous_top_ids.include?(winner.id)
@@ -124,7 +124,7 @@ class StandingsCalculator
 
       if top_users.size < [ 10, users.size ].min
         extras = users.reject { |u| top_users.include?(u) }
-                      .sort_by { |u| [ -challenger_points(u), current_match_placement(u), last_forecast_time(u).to_f, u.id ] }
+                      .sort_by { |u| [ -challenger_points(u), current_match_placement(u), -gold_balance(u), last_forecast_time(u).to_f, u.id ] }
                       .first([ 10, users.size ].min - top_users.size)
         top_users += extras
       end
@@ -133,7 +133,7 @@ class StandingsCalculator
         [ -top_ten_points(user), current_match_placement(user), -gold_balance(user), last_forecast_time(user).to_f, user.id ]
       end
       challengers = users.reject { |u| top_users.include?(u) }.sort_by do |user|
-        [ -challenger_points(user), current_match_placement(user), last_forecast_time(user).to_f, user.id ]
+        [ -challenger_points(user), current_match_placement(user), -gold_balance(user), last_forecast_time(user).to_f, user.id ]
       end
 
       top_ranked.each_with_index do |user, index|

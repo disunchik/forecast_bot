@@ -5,6 +5,7 @@
 <%= form_with model: @result, url: admin_match_result_path(@match), method: :patch, data: { controller: "goal-events" } do |form| %>
   <fieldset <%= "disabled" if @result.confirmed? %>>
   <h2>Счёт</h2>
+  <p class="muted">Дополнительное время учитывается, серия пенальти — нет. Если после дополнительного времени ничья, укажите ничейный счёт независимо от победителя серии.</p>
   <div class="grid-2">
     <div><h3>Первый тайм</h3><div class="score-fields"><div><label>Рома</label><%= form.number_field :halftime_roma, min: 0, required: true %></div><strong>:</strong><div><label><%= @match.opponent %></label><%= form.number_field :halftime_opponent, min: 0, required: true %></div></div></div>
     <div><h3>Итог после доп. времени</h3><div class="score-fields"><div><label>Рома</label><%= form.number_field :fulltime_roma, min: 0, required: true %></div><strong>:</strong><div><label><%= @match.opponent %></label><%= form.number_field :fulltime_opponent, min: 0, required: true %></div></div></div>
