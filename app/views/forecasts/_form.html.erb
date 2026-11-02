@@ -1,9 +1,10 @@
 <%= render "shared/errors", object: forecast %>
-<%= form_with model: [match, forecast] do |form| %>
+<%= form_with model: [match, forecast], data: { controller: "first-score" } do |form| %>
   <section class="card card-accent">
     <h2>1. Золотые баллы</h2>
     <p>Баланс: <strong><%= current_user.gold_points_balance(match.season) %> ЗБ</strong> · Доступно для этой ставки: <strong><%= @available_gold %> ЗБ</strong></p>
-    <p class="muted">Засчитается максимум 50% от обычных баллов за прогноз. Вся поставленная сумма будет списана после подтверждения результата.</p>
+    <% gold_percentage = match.match_result&.scoring_snapshot&.fetch("gold_percentage", nil) || ScoringRule.value_for("gold_percentage", 50) %>
+    <p class="muted">Засчитается максимум <%= gold_percentage %>% от обычных баллов за прогноз. Вся поставленная сумма будет списана после подтверждения результата.</p>
     <div class="field" style="max-width:220px"><%= form.label :gold_points_stake, "Поставить ЗБ" %><%= form.number_field :gold_points_stake, min: 0, max: @available_gold, required: true %></div>
   </section>
 
@@ -29,9 +30,10 @@
   <section class="card">
     <h2><%= match.temporary_question ? "3" : "2" %>. Счёт первого тайма</h2>
     <div class="score-fields">
-      <div><label>Рома</label><%= form.number_field :halftime_roma, min: 0, required: true %></div>
-      <strong>:</strong>
-      <div><label><%= match.opponent %></label><%= form.number_field :halftime_opponent, min: 0, required: true %></div>
+      <% score_teams(match).each_with_index do |(side, team), index| %>
+        <% if index.positive? %><strong>:</strong><% end %>
+        <div><%= form.label "halftime_#{side}", team %><%= form.number_field "halftime_#{side}", min: 0, required: true, data: { first_score_target: "halftime#{side.to_s.capitalize}", action: "input->first-score#update" } %></div>
+      <% end %>
     </div>
   </section>
 
@@ -39,17 +41,19 @@
     <h2><%= match.temporary_question ? "4" : "3" %>. Итоговый счёт</h2>
     <p class="muted">Для кубковых матчей учитывайте дополнительное время. Серия пенальти не является голами матча.</p>
     <div class="score-fields">
-      <div><label>Рома</label><%= form.number_field :fulltime_roma, min: 0, required: true %></div>
-      <strong>:</strong>
-      <div><label><%= match.opponent %></label><%= form.number_field :fulltime_opponent, min: 0, required: true %></div>
+      <% score_teams(match).each_with_index do |(side, team), index| %>
+        <% if index.positive? %><strong>:</strong><% end %>
+        <div><%= form.label "fulltime_#{side}", team %><%= form.number_field "fulltime_#{side}", min: 0, required: true, data: { first_score_target: "fulltime#{side.to_s.capitalize}", action: "input->first-score#update" } %></div>
+      <% end %>
     </div>
   </section>
 
   <section class="card">
     <h2><%= match.temporary_question ? "5" : "4" %>. Кто откроет счёт?</h2>
+    <p class="muted" data-first-score-target="hint"></p>
     <div class="check-list">
       <% [["roma", "Рома"], ["opponent", match.opponent], ["nobody", "Голов не будет"]].each do |value, label| %>
-        <div class="check-item"><%= form.radio_button :first_score, value, required: true %><%= form.label "first_score_#{value}", label %></div>
+        <div class="check-item"><%= form.radio_button :first_score, value, required: true, data: { first_score_target: "choice" } %><%= form.label "first_score_#{value}", label %></div>
       <% end %>
     </div>
   </section>

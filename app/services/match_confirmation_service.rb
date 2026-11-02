@@ -57,7 +57,7 @@ class MatchConfirmationService
       if match_result.goals.size != match_result.fulltime_roma
         raise Error, "Количество голов Ромы не совпадает с итоговым счётом"
       end
-      if @match.season.matches.where("forecast_number < ?", @match.forecast_number).where.not(status: [ :finished, :cancelled, :postponed ]).exists?
+      if @match.season.matches.where("forecast_number < ? AND kickoff_at <= ?", @match.forecast_number, @match.kickoff_at).where.not(status: [ :finished, :cancelled, :postponed ]).exists?
         raise Error, "Сначала подтвердите или отмените более ранние матчи сезона"
       end
     end
@@ -111,7 +111,9 @@ class MatchConfirmationService
     end
 
     def spend_stakes!(rows)
-      GoldPointTransaction.where(match: @match, kind: :stake).destroy_all
+      if GoldPointTransaction.where(match: @match, kind: [ :stake, :stake_refund ]).group(:user_id).sum(:amount).values.any?(&:nonzero?)
+        raise Error, "Предыдущее списание ставки не откачено. Повторное списание запрещено."
+      end
 
       rows.each do |row|
         forecast = row[:forecast]
@@ -140,7 +142,7 @@ class MatchConfirmationService
 
         # Previously granted gold is protected from administrative corrections.
         # Pay only an increase; repeat confirmations must not pay it again.
-        already_paid = GoldPointTransaction.placement.where(match: @match, user: row[:forecast].user).sum(:amount)
+        already_paid = GoldPointTransaction.placement.where(match: @match, season: @match.season, user: row[:forecast].user).sum(:amount)
         amount = rewards[row[:placement]].to_i - already_paid
         next unless amount.positive?
 

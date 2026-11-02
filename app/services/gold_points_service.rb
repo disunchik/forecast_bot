@@ -55,7 +55,7 @@ class GoldPointsService
         kind: :achievement,
         amount: amount,
         note: "Ачивка «#{achievement.name}»"
-      )
+      ) if amount.positive?
       AuditLogger.record!(admin: admin, action: "achievement.award", auditable: achievement, details: { user_id: user.id, gold_points: amount })
       award
     end

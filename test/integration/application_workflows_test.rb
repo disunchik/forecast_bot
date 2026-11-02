@@ -59,7 +59,7 @@ class ApplicationWorkflowsTest < ActionDispatch::IntegrationTest
     end
     assert_no_difference [ "Match.count", "Competition.count", "GoldPointTransaction.count", "UserAchievement.count" ] do
       post admin_competitions_path, params: { competition: { name: "Forbidden" } }
-      patch admin_match_path(@match), params: { match: { opponent: "Forbidden" } }
+      patch admin_match_path(@match), params: { state_token: MatchAdminPolicy.edit_token(@match), match: { opponent: "Forbidden" } }
       post admin_user_gold_point_transactions_path(@user), params: { amount: 999, note: "Forbidden" }
     end
   end
@@ -111,7 +111,7 @@ class ApplicationWorkflowsTest < ActionDispatch::IntegrationTest
     question.options.create!(text: "No")
     forecast = make_forecast(temporary_question_option: option)
     sign_in_as(@admin)
-    patch admin_match_path(@match), params: { match: { opponent: @match.opponent }, question_enabled: "1", question_text: "Question", question_type: "choice", question_points: 2, question_options: "Yes\nNo" }
+    patch admin_match_path(@match), params: { state_token: MatchAdminPolicy.edit_token(@match), match: { opponent: @match.opponent }, question_enabled: "1", question_text: "Question", question_type: "choice", question_points: 2, question_options: "Yes\nNo" }
     assert_redirected_to admin_match_path(@match)
     assert_equal option.id, forecast.reload.temporary_question_option_id
     assert_equal [ "Yes", "No" ], question.options.reload.order(:id).pluck(:text)
@@ -121,13 +121,13 @@ class ApplicationWorkflowsTest < ActionDispatch::IntegrationTest
     fund(amount: 10)
     forecast = make_forecast(gold_points_stake: 10)
     sign_in_as(@admin)
-    patch admin_match_path(@match), params: { match: { status: "cancelled" } }
+    patch admin_match_path(@match), params: { state_token: MatchAdminPolicy.edit_token(@match), match: { status: "cancelled" } }
     assert Forecast.exists?(forecast.id)
     assert_equal 0, @user.reserved_gold_points(@season)
-    patch admin_match_path(@match), params: { match: { status: "scheduled" } }
+    patch admin_match_path(@match), params: { state_token: MatchAdminPolicy.edit_token(@match), match: { status: "scheduled" }, confirm_reset: "1", reason: "Reopen test match" }
     assert_not Forecast.exists?(forecast.id)
     forecast = make_forecast(gold_points_stake: 10)
-    patch admin_match_path(@match), params: { match: { status: "postponed" } }
+    patch admin_match_path(@match), params: { state_token: MatchAdminPolicy.edit_token(@match), match: { status: "postponed" }, confirm_reset: "1", reason: "Postponement" }
     assert_not Forecast.exists?(forecast.id)
     assert_equal 10, @user.available_gold_points(@season)
   end
@@ -213,10 +213,13 @@ class ApplicationWorkflowsTest < ActionDispatch::IntegrationTest
   end
 
   test "result form accepts unchecked void flag and multiple correct options" do
+    @match.update!(kickoff_at: 1.day.ago)
     question = @match.create_temporary_question!(text: "Q", question_type: :choice, points: 2)
     options = [ question.options.create!(text: "A"), question.options.create!(text: "B") ]
     sign_in_as(@admin)
-    patch admin_match_result_path(@match), params: { match_result: forecast_attributes.except(:gold_points_stake), correct_option_ids: options.map(&:id) }
+    get edit_admin_match_result_path(@match)
+    token = css_select("input[name=state_token]").first["value"]
+    patch admin_match_result_path(@match), params: { state_token: token, match_result: forecast_attributes.except(:gold_points_stake), correct_option_ids: options.map(&:id) }
     assert_redirected_to edit_admin_match_result_path(@match)
     assert_not question.reload.voided?
     assert_equal 2, question.options.where(correct: true).count

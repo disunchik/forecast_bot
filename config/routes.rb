@@ -20,6 +20,7 @@ Rails.application.routes.draw do
       post :rebuild
     end
     resources :matches do
+      member { get :deletion }
       resource :result, controller: "match_results", only: %i[edit update] do
         match :preview, via: %i[get post]
         post :confirm
@@ -41,6 +42,7 @@ Rails.application.routes.draw do
     resources :audit_logs, only: :index
     resources :seasons, only: %i[index show new create] do
       member do
+        get :rollback_preview
         patch :activate
         post :rollback
       end

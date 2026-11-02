@@ -31,14 +31,16 @@ module Admin
       end
       attrs["role"] = new_role if new_role
 
-      if @user.admin? && new_role == "user" && User.admin.count == 1
-        @user.errors.add(:role, "нельзя снять роль у последнего администратора")
-        render :edit, status: :unprocessable_entity
-        return
-      end
-
-      before = @user.slice(:nickname, :email_address, :role)
       User.transaction do
+        # Serialize the last-admin check and the role update on SQLite.
+        User.where(id: @user.id).update_all("id = id")
+        @user.reload
+        if @user.admin? && new_role == "user" && User.admin.count == 1
+          @user.errors.add(:role, "нельзя снять роль у последнего администратора")
+          render :edit, status: :unprocessable_entity
+          raise ActiveRecord::Rollback
+        end
+        before = @user.slice(:nickname, :email_address, :role)
         if @user.update(attrs)
           if attrs.key?("password")
             scope = @user.sessions

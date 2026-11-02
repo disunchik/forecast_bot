@@ -5,7 +5,7 @@ class GoldPointTransaction < ApplicationRecord
   belongs_to :achievement, optional: true
   belongs_to :created_by, class_name: "User", optional: true
 
-  enum :kind, { manual: 0, achievement: 1, stake: 2, placement: 3, migration: 4 }
+  enum :kind, { manual: 0, achievement: 1, stake: 2, placement: 3, migration: 4, stake_refund: 5 }
 
   validates :amount, numericality: { only_integer: true, other_than: 0 }
   validates :note, presence: true, if: :manual?

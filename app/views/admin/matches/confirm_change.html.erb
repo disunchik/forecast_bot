@@ -1,0 +1,27 @@
+<%= render "admin/nav" %>
+<h1>Подтвердить изменение матча №<%= @match.forecast_number %></h1>
+<div class="card">
+  <p>Будут сброшены <strong><%= @match.forecasts.count %></strong> прогнозов. Их ставки ЗБ освободятся, пользователям потребуется отправить прогноз заново. Предыдущие прогнозы сохранятся в журнале администратора.</p>
+  <p>Освободится <strong><%= @match.cancelled? ? 0 : @match.forecasts.sum(:gold_points_stake) %> ЗБ</strong> из текущих резервов.</p>
+  <div class="grid-2">
+    <section><h2>Сейчас</h2><p><%= match_title(@match) %> · <%= @match.competition.name %></p><p><%= moscow_time(@match.kickoff_at) %> · <%= match_status_label(@match) %></p>
+      <% if (question = @match.temporary_question) %><p><%= question.text %> · <%= question.points %> б.</p><ul><% question.options.each do |option| %><li><%= option.text %></li><% end %></ul><% else %><p>Без временного вопроса</p><% end %>
+    </section>
+    <section><h2>После изменения</h2><p><%= match_title(@proposed_match) %> · <%= @proposed_match.competition.name %></p><p><%= moscow_time(@proposed_match.kickoff_at) %> · <%= match_status_label(@proposed_match) %></p>
+      <% if @pending.key?("question_enabled") %>
+        <% if ActiveModel::Type::Boolean.new.cast(@pending["question_enabled"]) %><p><%= @pending["question_text"] %> · <%= @pending["question_points"] %> б.</p><ul><% @pending["question_options"].to_s.lines.map(&:strip).reject(&:blank?).uniq.each do |option| %><li><%= option %></li><% end %></ul><% else %><p>Без временного вопроса</p><% end %>
+      <% else %><p>Вопрос не меняется</p><% end %>
+    </section>
+  </div>
+  <p>После дедлайна такая операция запрещена. Сезон и номер матча с историей изменять нельзя.</p>
+  <%= form_with url: admin_match_path(@match), method: :patch do %>
+    <%= hidden_field_tag :state_token, @state_token %>
+    <% @pending.each do |key, value| %>
+      <% if value.is_a?(Hash) %><% value.each do |field, content| %><%= hidden_field_tag "#{key}[#{field}]", content %><% end %>
+      <% else %><%= hidden_field_tag key, value %><% end %>
+    <% end %>
+    <div class="field"><%= label_tag :reason, "Причина изменения" %><%= text_field_tag :reason, nil, required: true %></div>
+    <div class="check-item"><%= check_box_tag :confirm_reset, "1", false, required: true %><%= label_tag :confirm_reset, "Подтверждаю сброс перечисленных прогнозов" %></div>
+    <div class="actions"><%= submit_tag "Изменить матч и сбросить прогнозы", class: "button button-danger" %><%= link_to "Отмена", admin_match_path(@match), class: "button button-secondary" %></div>
+  <% end %>
+</div>

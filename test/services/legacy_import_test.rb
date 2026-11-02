@@ -15,13 +15,17 @@ class LegacyImportTest < ActiveSupport::TestCase
       file.write(JSON.generate(data))
       file.flush
       before = ENV[variable]
+      enabled_before = ENV["LEGACY_IMPORT_ENABLED"]
       begin
         ENV[variable] = file.path
+        ENV["LEGACY_IMPORT_ENABLED"] = "1"
+        Rake::Task["legacy:require_explicit_enable"].reenable
         task = Rake::Task[task_name]
         task.reenable
         capture_io { task.invoke }
       ensure
         before ? ENV[variable] = before : ENV.delete(variable)
+        enabled_before ? ENV["LEGACY_IMPORT_ENABLED"] = enabled_before : ENV.delete("LEGACY_IMPORT_ENABLED")
       end
     end
   end
@@ -37,6 +41,17 @@ class LegacyImportTest < ActiveSupport::TestCase
     assert_no_difference "User.count" do
       import("legacy:import_users", "LEGACY_USERS", data)
     end
+  end
+
+  test "old import is disabled by default before any input file is read" do
+    previous = ENV.delete("LEGACY_IMPORT_ENABLED")
+    Rake::Task["legacy:require_explicit_enable"].reenable
+    Rake::Task["legacy:import_users"].reenable
+    assert_no_difference "User.count" do
+      capture_io { assert_raises(SystemExit) { Rake::Task["legacy:import_users"].invoke } }
+    end
+  ensure
+    ENV["LEGACY_IMPORT_ENABLED"] = previous if previous
   end
 
   test "imported earned achievements are permanent and never award gold twice" do

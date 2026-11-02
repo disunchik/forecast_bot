@@ -43,7 +43,7 @@ class QuestionsAndScoringTest < ActiveSupport::TestCase
 
   test "invalid halftime first score and negative scores are rejected" do
     [ { halftime_roma: 2, fulltime_roma: 1, first_score: "roma" }, { fulltime_opponent: -1 },
-      { first_score: "roma" }, { fulltime_roma: 1 } ].each do |attrs|
+      { fulltime_roma: 1, fulltime_opponent: 1, first_score: "nobody" }, { fulltime_roma: 1, fulltime_opponent: 1, first_score: nil } ].each do |attrs|
       forecast = @user.forecasts.new(match: @match, **forecast_attributes(**attrs))
       assert_not ForecastSubmissionService.new(forecast: forecast).call
     end

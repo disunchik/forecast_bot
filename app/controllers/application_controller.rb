@@ -5,10 +5,15 @@ class ApplicationController < ActionController::Base
   stale_when_importmap_changes
 
   before_action :ensure_legacy_setup_complete
+  before_action :prevent_private_page_caching
 
   helper_method :current_user, :active_season
 
   private
+    def prevent_private_page_caching
+      response.headers["Cache-Control"] = "no-store"
+    end
+
     def require_html_response
       head :not_acceptable unless request.format.html?
     end

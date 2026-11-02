@@ -9,6 +9,14 @@ module ApplicationHelper
     match.home? ? "Рома — #{match.opponent}" : "#{match.opponent} — Рома"
   end
 
+  def match_score(match, roma, opponent)
+    match.home? ? "#{roma}:#{opponent}" : "#{opponent}:#{roma}"
+  end
+
+  def score_teams(match)
+    match.home? ? [ [ :roma, "Рома" ], [ :opponent, match.opponent ] ] : [ [ :opponent, match.opponent ], [ :roma, "Рома" ] ]
+  end
+
   def first_score_label(value)
     { "roma" => "Рома", "opponent" => "Соперник", "nobody" => "Никто" }[value.to_s] || value.to_s
   end

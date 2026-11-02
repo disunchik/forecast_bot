@@ -1,6 +1,6 @@
 module Admin
   class MatchesController < BaseController
-    before_action :set_match, only: %i[show edit update destroy]
+    before_action :set_match, only: %i[show edit update destroy deletion]
 
     def index
       @filter = params[:filter].presence || "all"
@@ -39,6 +39,10 @@ module Admin
     end
 
     def edit
+      MatchAdminPolicy.ensure_editable!(@match)
+      @state_token = MatchAdminPolicy.edit_token(@match)
+    rescue MatchAdminPolicy::Error => e
+      redirect_to admin_match_path(@match), alert: e.message
     end
 
     def update
@@ -49,41 +53,56 @@ module Admin
 
       SeasonTransaction.call(@match.season) do
         @match.reload
+        MatchAdminPolicy.ensure_editable!(@match)
+        MatchAdminPolicy.ensure_identity!(@match, match_params)
+        AdminStateToken.verify!(params[:state_token], scope: "match_edit", id: @match.id, state: MatchAuditSnapshot.match_state(@match))
         raise MatchConfirmationService::Error, "Сначала откатите подтверждённый результат" if @match.match_result&.confirmed?
         old_signature = prediction_signature(@match)
         old_status = @match.status
-        before = @match.attributes
+        before = @match.attributes.merge("question" => MatchAuditSnapshot.question(@match.temporary_question))
+        preserved = MatchAuditSnapshot.forecasts(@match)
         @match.update!(match_params)
         save_question!(@match)
         invalidate = !@match.cancelled? && (old_signature != prediction_signature(@match) || @match.postponed? || old_status == "cancelled")
         if invalidate && @match.forecasts.exists?
+          unless params[:confirm_reset] == "1" && params[:reason].present?
+            raise MatchAdminPolicy::ResetRequired, "Изменение сбросит прогнозы. Проверьте последствия и укажите причину."
+          end
           count = @match.forecasts.count
           @match.forecasts.destroy_all
-          AuditLogger.record!(admin: current_user, action: "match.forecasts_reset", auditable: @match, details: { count: count, reason: "match_prediction_data_changed" })
+          AuditLogger.record!(admin: current_user, action: "match.forecasts_reset", auditable: @match,
+                              details: { count: count, reason: params[:reason], forecasts: preserved, question: before["question"] })
         end
-        AuditLogger.record!(admin: current_user, action: "match.update", auditable: @match, details: { before: before, after: @match.attributes })
+        AuditLogger.record!(admin: current_user, action: "match.update", auditable: @match,
+                            details: { before: before, after: @match.attributes.merge("question" => MatchAuditSnapshot.question(@match.temporary_question)), reason: params[:reason] })
       end
       redirect_to admin_match_path(@match), notice: "Матч обновлён."
-    rescue MatchConfirmationService::Error => e
+    rescue MatchAdminPolicy::ResetRequired
+      @match.reload
+      @state_token = MatchAdminPolicy.edit_token(@match)
+      @pending = params.permit(:question_enabled, :question_text, :question_type, :question_points, :question_options, match: [ :season_id, :competition_id, :forecast_number, :opponent, :venue, :kickoff_at, :status ]).to_h
+      @proposed_match = Match.new(@match.attributes.merge(@pending.fetch("match", {})).except("id"))
+      render :confirm_change, status: :unprocessable_entity
+    rescue MatchConfirmationService::Error, MatchAdminPolicy::Error, AdminStateToken::Error => e
       redirect_to admin_match_path(@match), alert: e.message
     rescue ActiveRecord::RecordInvalid => e
       @match.errors.add(:base, e.record.errors.full_messages.to_sentence) if e.record != @match
+      @state_token = MatchAdminPolicy.edit_token(Match.find(@match.id))
       render :edit, status: :unprocessable_entity
     end
 
+    def deletion
+      @deletion = MatchDestructionService.new(match: @match, admin: current_user)
+      @state_token = @deletion.token
+    end
+
     def destroy
-      SeasonTransaction.call(@match.season) do
-        @match.reload
-        if @match.forecasts.exists?
-          redirect_to admin_match_path(@match), alert: "Матч с прогнозами нельзя удалить. Используйте статус «Отменён»."
-        elsif @match.match_result&.confirmed?
-          redirect_to admin_match_path(@match), alert: "Подтверждённый матч нельзя удалить."
-        else
-          AuditLogger.record!(admin: current_user, action: "match.destroy", auditable: @match, details: { forecast_number: @match.forecast_number })
-          @match.destroy!
-          redirect_to admin_matches_path, notice: "Матч удалён."
-        end
-      end
+      MatchDestructionService.new(match: @match, admin: current_user).call!(
+        token: params[:state_token], reason: params[:reason], confirmation: params[:confirmation]
+      )
+      redirect_to admin_matches_path, notice: "Матч удалён. Затронутые расчёты откатились, журнал и выданные ЗБ сохранены."
+    rescue MatchDestructionService::Error, AdminStateToken::Error => e
+      redirect_to deletion_admin_match_path(@match), alert: e.message
     end
 
     private

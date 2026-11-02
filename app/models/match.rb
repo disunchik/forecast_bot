@@ -6,6 +6,7 @@ class Match < ApplicationRecord
   has_many :forecasts, dependent: :destroy
   has_one :match_result, dependent: :destroy
   has_one :standing_snapshot, dependent: :destroy
+  has_many :gold_point_transactions, dependent: :restrict_with_error
 
   enum :venue, { home: 0, away: 1 }
   enum :status, { scheduled: 0, postponed: 1, cancelled: 2, finished: 3 }
@@ -14,11 +15,21 @@ class Match < ApplicationRecord
   validates :opponent, presence: true, length: { maximum: 80 }
   validates :kickoff_at, presence: true
   validate :finished_requires_confirmed_result
+  validate :preserve_used_identity, on: :update
 
   scope :chronological, -> { order(:kickoff_at) }
 
   def forecast_opens_at
     kickoff_at - 48.hours
+  end
+
+  def conditions_locked?(at: Time.current)
+    at >= forecast_closes_at || match_result&.confirmed?
+  end
+
+  def identity_locked?
+    forecasts.exists? || gold_point_transactions.exists? || match_result&.scoring_snapshot.present? ||
+      AuditLog.exists?(auditable: self, action: "match.forecasts_reset")
   end
 
   def forecast_closes_at
@@ -50,6 +61,12 @@ class Match < ApplicationRecord
   end
 
   private
+    def preserve_used_identity
+      if (will_save_change_to_season_id? || will_save_change_to_forecast_number?) && identity_locked?
+        errors.add(:base, "Сезон и номер матча с историей изменять нельзя")
+      end
+    end
+
     def finished_requires_confirmed_result
       if finished? && !match_result&.confirmed?
         errors.add(:status, "«Завершён» устанавливается только после подтверждения результата")

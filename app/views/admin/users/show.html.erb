@@ -51,6 +51,6 @@
 
 <h2>Прогнозы текущего сезона</h2>
 <div class="table-wrap"><table><thead><tr><th>Матч</th><th>HT</th><th>FT</th><th>Ставка ЗБ</th><th>Баллы</th></tr></thead><tbody>
-<% @forecasts.each do |forecast| %><tr><td>№<%= forecast.match.forecast_number %> · <%= match_title(forecast.match) %></td><td><%= forecast.halftime_roma %>:<%= forecast.halftime_opponent %></td><td><%= forecast.fulltime_roma %>:<%= forecast.fulltime_opponent %></td><td><%= forecast.gold_points_stake %></td><td><%= forecast.forecast_score&.total_points || "—" %></td></tr><% end %>
+<% @forecasts.each do |forecast| %><tr><td>№<%= forecast.match.forecast_number %> · <%= match_title(forecast.match) %></td><td><%= match_score(forecast.match, forecast.halftime_roma, forecast.halftime_opponent) %></td><td><%= match_score(forecast.match, forecast.fulltime_roma, forecast.fulltime_opponent) %></td><td><%= forecast.gold_points_stake %></td><td><%= forecast.forecast_score&.total_points || "—" %></td></tr><% end %>
 <% if @forecasts.empty? %><tr><td colspan="5" class="empty">Прогнозов нет.</td></tr><% end %>
 </tbody></table></div>

@@ -5,8 +5,8 @@
 <tr>
   <td><%= forecast.forecast_score&.placement || "—" %></td>
   <td><strong><%= forecast.user.nickname %></strong></td>
-  <td><%= forecast.halftime_roma %>:<%= forecast.halftime_opponent %></td>
-  <td><%= forecast.fulltime_roma %>:<%= forecast.fulltime_opponent %></td>
+  <td><%= match_score(forecast.match, forecast.halftime_roma, forecast.halftime_opponent) %></td>
+  <td><%= match_score(forecast.match, forecast.fulltime_roma, forecast.fulltime_opponent) %></td>
   <td><%= forecast.scorers.map(&:name).join(", ").presence || "—" %></td>
   <td><%= forecast.forecast_assists.map { |a| a.no_assist? ? "Без ассиста" : a.player&.name }.compact.join(", ").presence || "—" %></td>
   <td><strong><%= forecast.forecast_score&.total_points || "—" %></strong></td>

@@ -13,9 +13,9 @@ class MatchTieBreakTest < ActiveSupport::TestCase
   end
 
   {
-    "fulltime before halftime" => [ { halftime_roma: 0, halftime_opponent: 1 }, { fulltime_roma: 3, fulltime_opponent: 2 } ],
-    "halftime before first goal" => [ { first_score: :opponent }, { halftime_roma: 2, halftime_opponent: 1, gold_points_stake: 1 } ],
-    "first goal before outcome" => [ { fulltime_roma: 2, fulltime_opponent: 3, gold_points_stake: 1 }, { fulltime_roma: 4, fulltime_opponent: 2, first_score: :opponent } ],
+    "fulltime before halftime" => [ { halftime_roma: 0, halftime_opponent: 1, gold_points_stake: 1 }, { fulltime_roma: 3, fulltime_opponent: 2 } ],
+    "halftime before first goal" => [ { halftime_roma: 2, halftime_opponent: 1, first_score: :opponent }, { halftime_roma: 0, halftime_opponent: 0, gold_points_stake: 1 } ],
+    "first goal before outcome" => [ { halftime_roma: 2, halftime_opponent: 1, fulltime_roma: 2, fulltime_opponent: 3, gold_points_stake: 1 }, { halftime_roma: 2, halftime_opponent: 1, fulltime_roma: 4, fulltime_opponent: 2, first_score: :opponent } ],
     "outcome before scorer" => [ { fulltime_roma: 4, fulltime_opponent: 2, gold_points_stake: 1 }, { fulltime_roma: 2, fulltime_opponent: 3 } ],
     "scorer before assist" => [ {}, { gold_points_stake: 2 } ],
     "assist before temporary answer" => [ { temporary_answer_text: "No" }, { temporary_answer_text: "Yes", gold_points_stake: 1 } ],

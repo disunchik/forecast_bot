@@ -13,6 +13,10 @@ class ConcurrentGameOperationsTest < ActiveSupport::TestCase
       @season.destroy!
     end
     AuditLog.where(admin: @admin).delete_all
+    if @second_admin
+      AuditLog.where(admin: @second_admin).delete_all
+      @second_admin.destroy!
+    end
     @achievement&.destroy!
     @admin&.destroy!
     @competition&.destroy!
@@ -76,5 +80,32 @@ class ConcurrentGameOperationsTest < ActiveSupport::TestCase
     assert_equal [ false, true ], results.sort_by(&:to_s), results.inspect
     assert_equal 1, ForecastScore.where(match_result: result).count
     assert_equal 3, @user.gold_points_balance(@season)
+  end
+
+  def signed_admin_session(user)
+    session = ActionDispatch::Integration::Session.new(Rails.application)
+    session.post "/session", params: { nickname: user.nickname, password: "password" }
+    session
+  end
+
+  test "parallel self demotions cannot remove the last administrator" do
+    @second_admin = User.create!(nickname: "Second#{SecureRandom.hex(5)}", email_address: "#{SecureRandom.hex(5)}@example.com",
+                                 password: "password", password_confirmation: "password", role: :admin)
+    sessions = [ @admin, @second_admin ].map { |user| [ user, signed_admin_session(user) ] }
+    results = race(*sessions.map do |user, session|
+      -> { session.patch "/admin/users/#{user.id}", params: { user: { role: "user" } }; session.response.status }
+    end)
+    assert_equal [ 302, 422 ], results.sort, results.inspect
+    assert_equal 1, User.admin.count
+  end
+
+  test "parallel result page visits create one draft" do
+    @match.update!(kickoff_at: 1.day.ago)
+    sessions = 2.times.map { signed_admin_session(@admin) }
+    results = race(*sessions.map do |session|
+      -> { session.get "/admin/matches/#{@match.id}/result/edit"; session.response.status }
+    end)
+    assert_equal [ 200, 200 ], results, results.inspect
+    assert_equal 1, MatchResult.where(match: @match).count
   end
 end

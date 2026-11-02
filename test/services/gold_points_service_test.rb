@@ -49,4 +49,21 @@ class GoldPointsServiceTest < ActiveSupport::TestCase
     assert_equal @admin.id, log.admin_id
     assert_equal "Test funding", log.details["note"]
   end
+
+  test "zero rewards still grant and reveal achievements without zero ledger entries" do
+    %w[achievement_normal_first achievement_secret_first achievement_subsequent].each do |key|
+      rule = ScoringRule.find_or_initialize_by(key: key)
+      rule.update!(label: key, value: 0)
+    end
+    [ false, true ].each do |secret|
+      achievement = Achievement.create!(name: "Zero #{secret}", secret: secret)
+      assert_no_difference "GoldPointTransaction.count" do
+        GoldPointsService.award_achievement!(user: @user, achievement: achievement, admin: @admin)
+        GoldPointsService.award_achievement!(user: @other_user, achievement: achievement, admin: @admin)
+      end
+      assert @user.achievements.exists?(achievement.id)
+      assert @other_user.achievements.exists?(achievement.id)
+      assert achievement.reload.revealed? if secret
+    end
+  end
 end

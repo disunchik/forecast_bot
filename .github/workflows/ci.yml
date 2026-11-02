@@ -126,5 +126,7 @@ jobs:
         if: failure()
         with:
           name: screenshots
-          path: ${{ github.workspace }}/tmp/capybara
+          path: |
+            ${{ github.workspace }}/tmp/capybara
+            ${{ github.workspace }}/log/test.log
           if-no-files-found: ignore

@@ -2,8 +2,8 @@
 <div class="card">
   <h2>Прогноз <%= @forecast.user == current_user ? "пользователя #{@forecast.user.nickname}" : @forecast.user.nickname %></h2>
   <dl class="details-list">
-    <dt>Первый тайм</dt><dd><%= @forecast.halftime_roma %>:<%= @forecast.halftime_opponent %></dd>
-    <dt>Итог</dt><dd><%= @forecast.fulltime_roma %>:<%= @forecast.fulltime_opponent %></dd>
+    <dt>Первый тайм</dt><dd><%= match_score(@match, @forecast.halftime_roma, @forecast.halftime_opponent) %></dd>
+    <dt>Итог</dt><dd><%= match_score(@match, @forecast.fulltime_roma, @forecast.fulltime_opponent) %></dd>
     <dt>Первый гол</dt><dd><%= first_score_label(@forecast.first_score) %></dd>
     <dt>Авторы голов</dt><dd><%= @forecast.scorers.map(&:name).join(", ").presence || "—" %></dd>
     <dt>Ассисты</dt><dd><%= (@forecast.forecast_assists.map { |a| a.no_assist? ? "Без голевой передачи" : a.player&.name }.compact.join(", ").presence || "—") %></dd>

@@ -14,36 +14,51 @@ module Admin
       end
 
       SeasonTransaction.call(@match.season) do
+        @match.reload
         @result.reload
+        @result.match = @match
+        if Time.current < @match.forecast_closes_at || @match.cancelled? || @match.postponed?
+          raise MatchConfirmationService::Error, "Фактический результат можно вводить после дедлайна для состоявшегося матча."
+        end
+        AdminStateToken.verify!(params[:state_token], scope: "result_edit", id: @result.id, state: MatchAuditSnapshot.result(@result))
         raise MatchConfirmationService::Error, "Сначала откатите подтверждённый результат" if @result.confirmed?
-        before = @result.attributes.merge("goals" => @result.goals.map(&:attributes))
+        before = MatchAuditSnapshot.result(@result)
         @result.update!(result_params.merge(state: :draft))
         save_goals!
         save_temporary_answers!
         AuditLogger.record!(admin: current_user, action: "match_result.update", auditable: @result,
-                            details: { before: before, after: @result.attributes.merge("goals" => @result.goals.reload.map(&:attributes)) })
+                            details: { before: before, after: MatchAuditSnapshot.result(@result) })
       end
       redirect_to edit_admin_match_result_path(@match), notice: "Черновик результата сохранён."
     rescue ActiveRecord::RecordInvalid => e
       @result.errors.merge!(e.record.errors) unless e.record == @result
       prepare_form
       render :edit, status: :unprocessable_entity
-    rescue MatchConfirmationService::Error => e
+    rescue MatchConfirmationService::Error, AdminStateToken::Error => e
       redirect_to edit_admin_match_result_path(@match), alert: e.message
     end
 
     def preview
-      prepare_form
-      @rows = MatchConfirmationService.new(match_result: @result, admin: current_user).preview
+      SeasonTransaction.call(@match.season) do
+        @match.reload
+        @result.reload
+        @result.match = @match
+        prepare_form
+        @rows = MatchConfirmationService.new(match_result: @result, admin: current_user).preview
+        @confirmation_token = AdminStateToken.issue(scope: "result_confirm", id: @match.id, state: confirmation_state)
+      end
       redirect_to preview_admin_match_result_path(@match), status: :see_other if request.post?
     rescue MatchConfirmationService::Error, ActiveRecord::RecordInvalid => e
       redirect_to edit_admin_match_result_path(@match), alert: e.message
     end
 
     def confirm
-      MatchConfirmationService.new(match_result: @result, admin: current_user).confirm!
+      SeasonTransaction.call(@match.season) do
+        AdminStateToken.verify!(params[:state_token], scope: "result_confirm", id: @match.id, state: confirmation_state)
+        MatchConfirmationService.new(match_result: @result, admin: current_user).confirm!
+      end
       redirect_to admin_match_path(@match), notice: "Результат подтверждён и таблица пересчитана."
-    rescue MatchConfirmationService::Error, ActiveRecord::RecordInvalid => e
+    rescue MatchConfirmationService::Error, ActiveRecord::RecordInvalid, AdminStateToken::Error => e
       redirect_to edit_admin_match_result_path(@match), alert: e.message
     end
 
@@ -53,11 +68,18 @@ module Admin
       end
 
       def set_result
-        @result = @match.match_result || @match.build_match_result
-        @result.save! unless @result.persisted?
+        @result = @match.match_result
+        return if @result
+
+        SeasonTransaction.call(@match.season) do
+          @match.reload
+          @result = @match.match_result || @match.build_match_result
+          @result.save! unless @result.persisted?
+        end
       end
 
       def prepare_form
+        @state_token = AdminStateToken.issue(scope: "result_edit", id: @result.id, state: MatchAuditSnapshot.result(MatchResult.find(@result.id)))
         @players = Player.order(:name)
         question = @match.temporary_question
         @text_answers = if question&.text?
@@ -66,6 +88,10 @@ module Admin
         else
                           []
         end
+      end
+
+      def confirmation_state
+        { match: MatchAuditSnapshot.match_state(@match), rules: @result.reload.scoring_snapshot.presence || ScoringRule.snapshot }
       end
 
       def result_params

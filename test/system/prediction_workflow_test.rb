@@ -76,4 +76,46 @@ class PredictionWorkflowTest < ApplicationSystemTestCase
     registration = page.evaluate_async_script("navigator.serviceWorker.ready.then(r => arguments[0](r.active.scriptURL))")
     assert_match "/service-worker", registration
   end
+
+  test "away prediction shows opponent first and automatic goal follows the named team" do
+    @match.update!(venue: :away)
+    login(@user)
+    click_link "Сделать прогноз"
+    fill_in "forecast_halftime_roma", with: 0
+    fill_in "forecast_halftime_opponent", with: 0
+    fill_in "forecast_fulltime_opponent", with: 0
+    fill_in "forecast_fulltime_roma", with: 1
+    assert_checked_field "forecast_first_score_roma"
+    assert_field "forecast_first_score_opponent", disabled: true
+    fill_in "forecast_fulltime_opponent", with: 1
+    assert_unchecked_field "forecast_first_score_roma"
+    choose "forecast_first_score_opponent"
+    fill_in "forecast_fulltime_opponent", with: 0
+    assert_checked_field "forecast_first_score_roma"
+    click_button "Отправить прогноз"
+    assert_text "Прогноз сохранён"
+    click_link "Профиль", exact: true
+    assert_current_path profile_path
+    click_link "Посмотреть прогноз"
+    assert_text "Inter — Рома"
+    assert_text "0:1"
+    assert_equal "roma", @user.forecasts.find_by!(match: @match).first_score
+  end
+
+  test "admin deletes a closed match only through the consequences form" do
+    forecast = make_forecast
+    @match.update!(kickoff_at: 1.day.ago)
+    login(@admin)
+    visit admin_match_path(@match)
+    assert_no_link "Редактировать", exact: true
+    assert_text "условия матча и вопрос заблокированы"
+    click_link "Удаление матча: посмотреть последствия"
+    assert_text "1 прогнозов"
+    fill_in "Причина удаления", with: "Test deletion"
+    fill_in "confirmation", with: @match.forecast_number
+    accept_confirm { click_button "Удалить матч и его прогнозы" }
+    assert_text "Матч удалён"
+    assert_not Match.exists?(@match.id)
+    assert_not Forecast.exists?(forecast.id)
+  end
 end

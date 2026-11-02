@@ -1,10 +1,10 @@
 <div class="card" style="max-width:560px;margin:0 auto">
   <h1>Регистрация</h1>
   <%= render "shared/errors", object: @user %>
-  <%= form_with model: @user, url: registrations_path do |form| %>
-    <div class="field"><%= form.label :nickname, "Никнейм" %><%= form.text_field :nickname, required: true, maxlength: 20 %></div>
+  <%= form_with model: @user, url: registrations_path, data: { turbo: false } do |form| %>
+    <div class="field"><%= form.label :nickname, "Никнейм" %><%= form.text_field :nickname, required: true, minlength: 2, maxlength: 20, autocomplete: "username", aria: { describedby: "nickname_rules" } %><p id="nickname_rules" class="muted">От 2 до 20 символов: буквы, цифры, пробел, _ и -. Регистр не различается; ник должен быть уникальным.</p></div>
     <div class="field"><%= form.label :email_address, "Email" %><%= form.email_field :email_address, required: true, autocomplete: "email" %></div>
-    <div class="field"><%= form.label :password, "Пароль (минимум 8 символов)" %><%= form.password_field :password, required: true, autocomplete: "new-password" %></div>
+    <div class="field"><%= form.label :password, "Пароль (минимум 8 символов)" %><%= form.password_field :password, required: true, minlength: 8, maxlength: 72, autocomplete: "new-password", aria: { describedby: "password_rules" } %><p id="password_rules" class="muted">Не меньше 8 символов и не больше 72 байт. Повтор пароля должен совпадать. Старое кодовое слово не требуется — создайте новый аккаунт.</p></div>
     <div class="field"><%= form.label :password_confirmation, "Повтор пароля" %><%= form.password_field :password_confirmation, required: true, autocomplete: "new-password" %></div>
     <%= form.submit "Создать аккаунт" %>
   <% end %>

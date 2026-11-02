@@ -1,4 +1,5 @@
 class MatchResult < ApplicationRecord
+  include AutomaticFirstScore
   belongs_to :match
   belongs_to :confirmed_by, class_name: "User", optional: true
 

@@ -4,6 +4,9 @@ require "capybara/minitest"
 require "selenium/webdriver"
 
 class ApplicationSystemTestCase < ActionDispatch::SystemTestCase
+  Capybara.default_max_wait_time = 5
+
+  setup { page.current_window.resize_to(1280, 900) }
   if ENV["SELENIUM_REMOTE_URL"]
     Capybara.register_driver :remote_chrome do |app|
       options = Selenium::WebDriver::Chrome::Options.new

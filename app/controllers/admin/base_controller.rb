@@ -7,6 +7,8 @@ module Admin
       def audit_admin_mutation
         if action_name.in?(%w[create update destroy archive restore activate]) && controller_name.in?(%w[players achievements seasons competitions])
           ActiveRecord::Base.transaction do
+            # Take SQLite's write lock before reading the state we will audit.
+            User.where(id: current_user.id).update_all("id = id")
             target = instance_variable_get("@#{controller_name.singularize}")
             if target.nil? && params[:id].present?
               model = { "players" => Player, "achievements" => Achievement, "seasons" => Season, "competitions" => Competition }.fetch(controller_name)

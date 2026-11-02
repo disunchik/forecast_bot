@@ -1,6 +1,11 @@
 namespace :legacy do
+  task :require_explicit_enable do
+    unless ENV["LEGACY_IMPORT_ENABLED"] == "1"
+      abort "Импорт старых данных отключён. В новом сезоне участники регистрируются заново. Для отдельного согласованного переноса требуется LEGACY_IMPORT_ENABLED=1."
+    end
+  end
   desc "Импорт старых пользователей из JSON. LEGACY_USERS=/path/users.json"
-  task import_users: :environment do
+  task import_users: [ :require_explicit_enable, :environment ] do
     path = ENV.fetch("LEGACY_USERS")
     data = JSON.parse(File.read(path))
 
@@ -24,7 +29,7 @@ namespace :legacy do
   end
 
   desc "Импорт ачивок из JSON-массива. LEGACY_ACHIEVEMENTS=/path/achievements.json"
-  task import_achievements: :environment do
+  task import_achievements: [ :require_explicit_enable, :environment ] do
     path = ENV.fetch("LEGACY_ACHIEVEMENTS")
     JSON.parse(File.read(path)).each do |row|
       achievement = Achievement.find_or_initialize_by(name: row.fetch("name"))
@@ -42,7 +47,7 @@ end
 
 namespace :legacy do
   desc "Импорт уже полученных ачивок без повторного начисления ЗБ. LEGACY_USER_ACHIEVEMENTS=/path/user_achievements.json"
-  task import_user_achievements: :environment do
+  task import_user_achievements: [ :require_explicit_enable, :environment ] do
     path = ENV.fetch("LEGACY_USER_ACHIEVEMENTS")
     data = JSON.parse(File.read(path))
     rows = data.is_a?(Hash) ? data.map { |nickname, names| { "nickname" => nickname, "achievements" => Array(names) } } : data

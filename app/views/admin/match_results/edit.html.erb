@@ -2,15 +2,18 @@
 <% if @result.confirmed? %><div class="alert alert-success">Результат подтверждён <%= moscow_time(@result.confirmed_at) %>. Для изменения сначала выполните откат сезона.</div><% end %>
 <div class="card">
 <%= render "shared/errors", object: @result %>
-<%= form_with model: @result, url: admin_match_result_path(@match), method: :patch, data: { controller: "goal-events" } do |form| %>
-  <fieldset <%= "disabled" if @result.confirmed? %>>
+<%= form_with model: @result, url: admin_match_result_path(@match), method: :patch, data: { controller: "goal-events first-score" } do |form| %>
+  <%= hidden_field_tag :state_token, @state_token %>
+  <% editable = !@result.confirmed? && Time.current >= @match.forecast_closes_at && !@match.cancelled? && !@match.postponed? %>
+  <% unless editable %><p class="muted">Редактирование результата доступно после дедлайна. Подтверждённый результат сначала нужно откатить; отменённый и перенесённый матч не рассчитывается.</p><% end %>
+  <fieldset <%= "disabled" unless editable %>>
   <h2>Счёт</h2>
   <p class="muted">Дополнительное время учитывается, серия пенальти — нет. Если после дополнительного времени ничья, укажите ничейный счёт независимо от победителя серии.</p>
   <div class="grid-2">
-    <div><h3>Первый тайм</h3><div class="score-fields"><div><label>Рома</label><%= form.number_field :halftime_roma, min: 0, required: true %></div><strong>:</strong><div><label><%= @match.opponent %></label><%= form.number_field :halftime_opponent, min: 0, required: true %></div></div></div>
-    <div><h3>Итог после доп. времени</h3><div class="score-fields"><div><label>Рома</label><%= form.number_field :fulltime_roma, min: 0, required: true %></div><strong>:</strong><div><label><%= @match.opponent %></label><%= form.number_field :fulltime_opponent, min: 0, required: true %></div></div></div>
+    <div><h3>Первый тайм</h3><div class="score-fields"><% score_teams(@match).each_with_index do |(side, team), index| %><% if index.positive? %><strong>:</strong><% end %><div><%= form.label "halftime_#{side}", team %><%= form.number_field "halftime_#{side}", min: 0, required: true, data: { first_score_target: "halftime#{side.to_s.capitalize}", action: "input->first-score#update" } %></div><% end %></div></div>
+    <div><h3>Итог после доп. времени</h3><div class="score-fields"><% score_teams(@match).each_with_index do |(side, team), index| %><% if index.positive? %><strong>:</strong><% end %><div><%= form.label "fulltime_#{side}", team %><%= form.number_field "fulltime_#{side}", min: 0, required: true, data: { first_score_target: "fulltime#{side.to_s.capitalize}", action: "input->first-score#update" } %></div><% end %></div></div>
   </div>
-  <h3>Кто открыл счёт?</h3><div class="check-list"><% [["roma", "Рома"], ["opponent", @match.opponent], ["nobody", "Никто"]].each do |value, label| %><div class="check-item"><%= form.radio_button :first_score, value %><%= form.label "first_score_#{value}", label %></div><% end %></div>
+  <h3>Кто открыл счёт?</h3><p class="muted" data-first-score-target="hint"></p><div class="check-list"><% [["roma", "Рома"], ["opponent", @match.opponent], ["nobody", "Никто"]].each do |value, label| %><div class="check-item"><%= form.radio_button :first_score, value, data: { first_score_target: "choice" } %><%= form.label "first_score_#{value}", label %></div><% end %></div>
 
   <h2>Голы Ромы</h2><p class="muted">Добавьте по одной строке на каждый гол Ромы. Для автогола соперника выберите «Автогол соперника».</p>
   <div data-goal-events-target="list">

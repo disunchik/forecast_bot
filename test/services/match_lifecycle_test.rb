@@ -174,6 +174,36 @@ class MatchLifecycleTest < ActiveSupport::TestCase
     assert_equal 3, @user.gold_points_balance(@season)
   end
 
+  test "repeated stake rollback appends refunds without deleting or duplicating ledger events" do
+    fund(amount: 10)
+    @match.update!(kickoff_at: 1.day.ago)
+    forecast = make_forecast(gold_points_stake: 3)
+    result = draft_result
+    MatchConfirmationService.new(match_result: result, admin: @admin).confirm!
+    original = GoldPointTransaction.stake.find_by!(match: @match)
+    2.times do
+      MatchRollbackService.new(season: @season, keep_through_number: 0, admin: @admin).call!
+      assert GoldPointTransaction.exists?(original.id)
+      assert_equal 13, @user.gold_points_balance(@season)
+      assert_equal 3, @user.reserved_gold_points(@season)
+      MatchConfirmationService.new(match_result: result, admin: @admin).confirm!
+      assert_equal 10, @user.gold_points_balance(@season)
+      assert_equal 21, forecast.reload.forecast_score.total_points
+    end
+    assert_equal(-9, GoldPointTransaction.stake.where(match: @match).sum(:amount))
+    assert_equal 6, GoldPointTransaction.stake_refund.where(match: @match).sum(:amount)
+    assert_equal 3, GoldPointTransaction.placement.where(match: @match).sum(:amount)
+  end
+
+  test "future rescheduled smaller number does not block an already played later match" do
+    later = make_match(kickoff: 1.day.ago)
+    make_forecast(match: later)
+    result = draft_result(match: later)
+    MatchConfirmationService.new(match_result: result, admin: @admin).confirm!
+    assert result.reload.confirmed?
+    assert @match.reload.scheduled?
+  end
+
   test "equal match results use submitted time and then permanent id" do
     @match.update!(kickoff_at: 1.day.ago)
     early = make_forecast(submitted_at: 2.hours.ago)
