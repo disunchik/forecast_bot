@@ -1,37 +1,53 @@
-<div class="actions profile-heading">
+<div class="page-heading profile-heading">
   <h1>Профиль</h1>
   <%= link_to "Настройки", edit_profile_path, class: "button button-secondary" %>
 </div>
 <div class="profile-stats">
   <div class="card"><div class="muted">Никнейм</div><div class="stat profile-nickname"><%= @user.nickname %></div></div>
-  <div class="card"><div class="muted">Доступно ЗБ</div><div class="stat"><%= @user.available_gold_points(active_season) %></div></div>
+  <div class="card"><div class="muted">Доступно ЗБ</div><div class="stat numeric"><%= @user.available_gold_points(active_season) %></div></div>
   <%= link_to achievements_profile_path, class: "card profile-achievements" do %>
     <span class="muted">Ачивки</span>
-    <span class="stat"><%= @obtained_achievement_ids.size %>/<%= @achievements.size %></span>
+    <span class="stat numeric"><%= @obtained_achievement_ids.size %>/<%= @achievements.size %></span>
   <% end %>
 </div>
 
 <section class="card profile-section" aria-labelledby="my-forecasts-heading">
-  <h2 id="my-forecasts-heading">Мои прогнозы</h2>
+  <h2 id="my-forecasts-heading" class="section-heading">Мои прогнозы</h2>
   <% if @forecasts.empty? %><p class="empty">У вас пока нет прогнозов в текущем сезоне.</p><% end %>
   <% @forecasts.each do |forecast| %>
     <article class="profile-forecast">
-      <strong>№<%= forecast.match.forecast_number %> · <%= match_title(forecast.match) %></strong>
-      <p>Первый тайм: <%= match_score(forecast.match, forecast.halftime_roma, forecast.halftime_opponent) %> · Итог: <%= match_score(forecast.match, forecast.fulltime_roma, forecast.fulltime_opponent) %></p>
-      <% if forecast.forecast_score %><span class="badge badge-gold"><%= forecast.forecast_score.total_points %> баллов</span><% end %>
+      <div class="forecast-line">
+        <h3><span class="numeric">№<%= forecast.match.forecast_number %></span> <%= match_title(forecast.match) %></h3>
+        <% if forecast.forecast_score %><span class="badge badge-gold numeric"><%= forecast.forecast_score.total_points %> баллов</span><% end %>
+      </div>
+      <div class="forecast-scores">
+        <div><span class="muted">Первый тайм:</span> <strong class="score-value numeric"><%= match_score(forecast.match, forecast.halftime_roma, forecast.halftime_opponent) %></strong></div>
+        <div><span class="muted">Итог:</span> <strong class="score-value numeric"><%= match_score(forecast.match, forecast.fulltime_roma, forecast.fulltime_opponent) %></strong></div>
+      </div>
       <div class="actions"><%= link_to "Посмотреть прогноз", match_forecast_path(forecast.match, forecast), class: "button button-small" %></div>
     </article>
   <% end %>
 </section>
 
 <section class="card profile-section" aria-labelledby="gold-history-heading">
-  <h2 id="gold-history-heading">История ЗБ</h2>
+  <h2 id="gold-history-heading" class="section-heading">История ЗБ</h2>
   <% if @transactions.empty? %>
     <p class="empty">Операций пока нет.</p>
   <% else %>
-    <div class="table-wrap"><table><thead><tr><th>Дата</th><th>Изменение</th><th>Причина</th></tr></thead><tbody>
-      <% @transactions.each do |tx| %><tr><td><%= moscow_time(tx.created_at) %></td><td><strong><%= tx.amount.positive? ? "+#{tx.amount}" : tx.amount %></strong></td><td><%= tx.note %></td></tr><% end %>
-    </tbody></table></div>
+    <div class="table-wrap">
+      <table aria-label="История ваших золотых баллов">
+        <thead><tr><th scope="col">Дата</th><th scope="col" class="numeric">Изменение</th><th scope="col">Причина</th></tr></thead>
+        <tbody>
+          <% @transactions.each do |tx| %>
+            <tr>
+              <td><%= moscow_time(tx.created_at) %></td>
+              <td class="numeric"><strong><%= tx.amount.positive? ? "+#{tx.amount}" : tx.amount %></strong></td>
+              <td><%= tx.note %></td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
   <% end %>
 </section>
 <div class="actions"><%= button_to "Выйти", session_path, method: :delete, form: { data: { turbo: false } }, class: "button button-secondary" %></div>

@@ -1,11 +1,17 @@
-<%= render "admin/nav" %><h1>Результаты</h1>
+<%= render "admin/nav" %>
+<div class="page-heading"><h1>Результаты</h1></div>
 <%= render "admin/season_picker", url: admin_results_path %>
-<div class="cards">
-  <% if @matches.empty? %><div class="card empty">Матчи сезона пока не добавлены.</div><% end %>
+<div class="fixture-list">
+  <% if @matches.empty? %><div class="empty">Матчи сезона пока не добавлены.</div><% end %>
   <% @matches.each do |match| %>
-    <div class="card"><strong>№<%= match.forecast_number %> · <%= match_title(match) %></strong>
-      <p><%= result_state_label(match.match_result) %> · <%= moscow_time(match.kickoff_at) %></p>
-      <%= link_to "События и расчёт", edit_admin_match_result_path(match), class: "button" %>
+    <div class="fixture-row">
+      <div class="fixture-number">№<%= match.forecast_number %></div>
+      <div class="fixture-main">
+        <strong><%= match_title(match) %></strong>
+        <div class="fixture-meta"><%= moscow_time(match.kickoff_at) %></div>
+        <span class="badge"><%= result_state_label(match.match_result) %></span>
+      </div>
+      <div class="fixture-actions"><%= link_to "События и расчёт", edit_admin_match_result_path(match), class: "button button-secondary" %></div>
     </div>
   <% end %>
 </div>

@@ -1,13 +1,13 @@
-<div class="actions profile-heading">
-  <h1>Ачивки <span class="muted"><%= @obtained_achievement_ids.size %>/<%= @achievements.size %></span></h1>
+<div class="page-heading profile-heading">
+  <h1>Ачивки <span class="muted numeric"><%= @obtained_achievement_ids.size %>/<%= @achievements.size %></span></h1>
   <%= link_to "Вернуться в профиль", profile_path, class: "button button-secondary" %>
 </div>
 <div class="cards">
   <% @achievements.each do |achievement| %>
     <% obtained = @obtained_achievement_ids.include?(achievement.id) %>
     <article class="card">
-      <div class="actions achievement-heading">
-        <strong><%= achievement.name %></strong>
+      <div class="section-heading achievement-heading">
+        <h2><%= achievement.name %></h2>
         <% if obtained %><span class="badge badge-gold">Получена</span><% elsif achievement.secret? && !achievement.revealed? %><span class="badge">Секретная</span><% end %>
       </div>
       <% if achievement.secret? && !achievement.revealed? %>

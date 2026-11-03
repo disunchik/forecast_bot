@@ -1,13 +1,16 @@
 <%= render "admin/nav" %>
-<h1>Турниры</h1>
-<div class="actions page-actions">
+<div class="page-heading">
+  <h1>Турниры</h1>
   <%= link_to "Добавить турнир", new_admin_competition_path, class: "button" %>
 </div>
-<div class="cards">
-  <% if @competitions.empty? %><div class="card empty">Турниры пока не добавлены.</div><% end %>
-  <% @competitions.each do |competition| %>
-    <div class="card"><strong><%= competition.name %></strong> · <%= competition.active? ? "Активный" : "В архиве" %>
-      <%= link_to "Редактировать", edit_admin_competition_path(competition) %>
-    </div>
-  <% end %>
+<div class="table-wrap">
+  <table>
+    <thead><tr><th scope="col">Турнир</th><th scope="col">Статус</th><th scope="col"><span class="sr-only">Действие</span></th></tr></thead>
+    <tbody>
+      <% @competitions.each do |competition| %>
+        <tr><td><strong><%= competition.name %></strong></td><td><span class="badge"><%= competition.active? ? "Активный" : "В архиве" %></span></td><td><%= link_to "Редактировать", edit_admin_competition_path(competition) %></td></tr>
+      <% end %>
+      <% if @competitions.empty? %><tr><td colspan="3" class="empty">Турниры пока не добавлены.</td></tr><% end %>
+    </tbody>
+  </table>
 </div>
