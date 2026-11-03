@@ -1,4 +1,25 @@
-<h2><%= title %></h2>
-<div class="table-wrap"><table><thead><tr><th>#</th><th>Участник</th><th>Очки таблицы</th><th>Последний матч</th></tr></thead><tbody>
-<% entries.each do |entry| %><tr><td><%= entry.rank %></td><td><strong><%= entry.user.nickname %></strong></td><td><%= entry.points %></td><td><%= entry.last_match_points %></td></tr><% end %>
-</tbody></table></div>
+<section class="standings-section">
+  <h2 class="section-heading"><%= title %></h2>
+  <div class="table-wrap standings-table">
+    <table aria-label="<%= title %>">
+      <thead>
+        <tr>
+          <th scope="col" class="rank-cell">#</th>
+          <th scope="col">Участник</th>
+          <th scope="col" class="numeric points-cell">Очки таблицы</th>
+          <th scope="col" class="numeric">Последний матч</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% entries.each do |entry| %>
+          <tr class="<%= "current-user" if entry.user_id == current_user&.id %>">
+            <td class="numeric rank-cell"><%= entry.rank %></td>
+            <th scope="row"><%= entry.user.nickname %></th>
+            <td class="numeric points-cell"><strong><%= entry.points %></strong></td>
+            <td class="numeric"><%= entry.last_match_points %></td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+  </div>
+</section>

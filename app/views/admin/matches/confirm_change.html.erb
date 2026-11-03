@@ -4,10 +4,10 @@
   <p>Будут сброшены <strong><%= @match.forecasts.count %></strong> прогнозов. Их ставки ЗБ освободятся, пользователям потребуется отправить прогноз заново. Предыдущие прогнозы сохранятся в журнале администратора.</p>
   <p>Освободится <strong><%= @match.cancelled? ? 0 : @match.forecasts.sum(:gold_points_stake) %> ЗБ</strong> из текущих резервов.</p>
   <div class="grid-2">
-    <section><h2>Сейчас</h2><p><%= match_title(@match) %> · <%= @match.competition.name %></p><p><%= moscow_time(@match.kickoff_at) %> · <%= match_status_label(@match) %></p>
+    <section><h2 class="section-heading">Сейчас</h2><p><%= match_title(@match) %> · <%= @match.competition.name %></p><p><%= moscow_time(@match.kickoff_at) %> · <%= match_status_label(@match) %></p>
       <% if (question = @match.temporary_question) %><p><%= question.text %> · <%= question.points %> б.</p><ul><% question.options.each do |option| %><li><%= option.text %></li><% end %></ul><% else %><p>Без временного вопроса</p><% end %>
     </section>
-    <section><h2>После изменения</h2><p><%= match_title(@proposed_match) %> · <%= @proposed_match.competition.name %></p><p><%= moscow_time(@proposed_match.kickoff_at) %> · <%= match_status_label(@proposed_match) %></p>
+    <section><h2 class="section-heading">После изменения</h2><p><%= match_title(@proposed_match) %> · <%= @proposed_match.competition.name %></p><p><%= moscow_time(@proposed_match.kickoff_at) %> · <%= match_status_label(@proposed_match) %></p>
       <% if @pending.key?("question_enabled") %>
         <% if ActiveModel::Type::Boolean.new.cast(@pending["question_enabled"]) %><p><%= @pending["question_text"] %> · <%= @pending["question_points"] %> б.</p><ul><% @pending["question_options"].to_s.lines.map(&:strip).reject(&:blank?).uniq.each do |option| %><li><%= option %></li><% end %></ul><% else %><p>Без временного вопроса</p><% end %>
       <% else %><p>Вопрос не меняется</p><% end %>

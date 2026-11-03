@@ -1,5 +1,5 @@
 <%= render "admin/nav" %><h1>Редактировать пользователя</h1>
-<div class="card" style="max-width:680px">
+<div class="card form-narrow">
   <%= render "shared/errors", object: @user %>
   <%= form_with model: [:admin, @user] do |form| %>
     <div class="field"><%= form.label :nickname, "Никнейм" %><%= form.text_field :nickname, required: true, maxlength: 20 %></div>

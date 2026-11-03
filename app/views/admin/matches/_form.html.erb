@@ -13,9 +13,9 @@
   <p class="muted">После появления прогнозов сезон и номер фиксируются. После дедлайна условия и вопрос изменить нельзя. Перенос после дедлайна выполняется удалением старого матча и созданием нового; перед удалением будут показаны все затронутые расчёты.</p>
 
   <% question = match.temporary_question %>
-  <div class="card" style="background:#fffaf3">
+  <section class="form-section">
     <h3>Временный вопрос</h3>
-    <%= hidden_field_tag :question_enabled, "0" %>
+    <%= hidden_field_tag :question_enabled, "0", id: nil %>
     <div class="check-item"><%= check_box_tag :question_enabled, "1", question.present?, id: "question_enabled" %><label for="question_enabled">Добавить временный вопрос</label></div>
     <div class="field"><label for="question_text">Текст вопроса</label><%= text_field_tag :question_text, question&.text %></div>
     <div class="grid-2">
@@ -23,7 +23,7 @@
       <div class="field"><label for="question_points">Баллы</label><%= number_field_tag :question_points, question&.points || 1, min: 0 %></div>
     </div>
     <div class="field"><label for="question_options">Варианты ответа — по одному в строке</label><%= text_area_tag :question_options, question&.options&.pluck(:text)&.join("\n"), placeholder: "Используется только для типа «Выбор из вариантов»" %></div>
-  </div>
+  </section>
 
   <div class="actions"><%= form.submit match.persisted? ? "Сохранить матч" : "Создать матч" %><%= link_to "Отмена", admin_matches_path, class: "button button-secondary" %></div>
 <% end %>

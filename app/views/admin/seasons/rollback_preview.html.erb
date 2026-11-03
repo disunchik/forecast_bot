@@ -3,7 +3,7 @@
 <div class="card">
   <% before_first = @number < (@season.matches.minimum(:forecast_number) || 1) %>
   <p><% if before_first %>Будут отменены все подтверждённые расчёты сезона.<% else %>Останутся подтверждёнными матчи до №<%= @number %> включительно.<% end %> Прогнозы и фактические события сохраняются; выданные ЗБ не отбираются.</p>
-  <h2>Расчёты, которые будут отменены</h2>
+  <h2 class="section-heading">Расчёты, которые будут отменены</h2>
   <ul><% @rollback.affected_matches.each do |match| %><li>№<%= match.forecast_number %> · <%= match_title(match) %> · <%= match.forecasts.count %> прогнозов</li><% end %></ul>
   <% if @rollback.affected_matches.exists? %>
     <p>Таблицы и очки этих матчей отменятся. Списанные ставки вернутся в резерв отдельными операциями журнала. Затем потребуется повторно подтвердить фактические результаты по порядку.</p>

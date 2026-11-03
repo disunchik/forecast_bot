@@ -1,28 +1,41 @@
-<h1>Главная</h1>
+<div class="page-heading matchday-heading">
+  <h1>Главная</h1>
+  <% if active_season %>
+    <div class="season-summary">
+      <span class="muted">Сезон <strong><%= active_season.name %></strong></span>
+      <span class="gold-available">Доступно: <strong><%= current_user.available_gold_points(active_season) %> ЗБ</strong></span>
+    </div>
+  <% end %>
+</div>
 <% unless active_season %>
   <div class="alert alert-error">Активный сезон ещё не создан.</div>
 <% else %>
-  <p class="muted">Сезон <strong><%= active_season.name %></strong> · Доступно: <strong><%= current_user.available_gold_points(active_season) %> ЗБ</strong></p>
-
   <% if @open_matches.any? %>
-    <h2>Открытые прогнозы</h2>
+    <h2 class="section-heading">Открытые прогнозы</h2>
     <div class="cards">
       <% @open_matches.each do |match| %>
         <% forecast = @forecasts[match.id] %>
-        <article class="card card-accent">
-          <div class="badge badge-open">Прогноз открыт</div>
-          <h2><%= match_title(match) %></h2>
-          <p><%= match.competition.name %> · Матч прогнозистов №<%= match.forecast_number %></p>
-          <p class="muted">Начало: <%= moscow_time(match.kickoff_at) %><br>Приём до: <%= moscow_time(match.forecast_closes_at) %></p>
+        <article class="match-panel" aria-labelledby="match-<%= match.id %>-heading">
+          <div class="match-main">
+            <h2 id="match-<%= match.id %>-heading"><%= match_title(match) %></h2>
+            <div class="match-meta"><span><%= match.competition.name %></span><span class="match-number">Матч прогнозистов <strong>№<%= match.forecast_number %></strong></span></div>
+            <p class="muted">Начало: <time datetime="<%= match.kickoff_at.iso8601 %>"><%= moscow_time(match.kickoff_at) %></time></p>
+          </div>
+          <div class="match-deadline">
+            <span class="badge badge-open">Прогноз открыт</span>
+            <p>Приём до (МСК):<br><time datetime="<%= match.forecast_closes_at.iso8601 %>"><%= moscow_time(match.forecast_closes_at) %></time></p>
+            <% if forecast %>
+              <%= link_to "Изменить прогноз", edit_match_forecast_path(match, forecast), class: "button button-gold" %>
+            <% else %>
+              <%= link_to "Сделать прогноз", new_match_forecast_path(match), class: "button button-gold" %>
+            <% end %>
+          </div>
           <% if forecast %>
             <div class="forecast-summary">
-              <strong>Ваш прогноз</strong><br>
-              HT: <%= match_score(forecast.match, forecast.halftime_roma, forecast.halftime_opponent) %> · FT: <%= match_score(forecast.match, forecast.fulltime_roma, forecast.fulltime_opponent) %><br>
-              Первый гол: <%= first_score_label(forecast.first_score) %>
+              <strong>Ваш прогноз</strong>
+              <div class="forecast-scores"><span>Первый тайм: <strong class="score-value"><%= match_score(forecast.match, forecast.halftime_roma, forecast.halftime_opponent) %></strong></span><span>Итог: <strong class="score-value"><%= match_score(forecast.match, forecast.fulltime_roma, forecast.fulltime_opponent) %></strong></span></div>
+              <span>Первый гол: <%= first_score_label(forecast.first_score) %></span>
             </div>
-            <div class="actions"><%= link_to "Изменить прогноз", edit_match_forecast_path(match, forecast), class: "button" %></div>
-          <% else %>
-            <div class="actions"><%= link_to "Сделать прогноз", new_match_forecast_path(match), class: "button" %></div>
           <% end %>
         </article>
       <% end %>
@@ -32,10 +45,10 @@
   <% end %>
 
   <% if @upcoming_match && !@open_matches.include?(@upcoming_match) %>
-    <h2>Ближайший матч</h2>
-    <div class="card">
+    <h2 class="section-heading">Ближайший матч</h2>
+    <div class="upcoming-match">
       <h3><%= match_title(@upcoming_match) %></h3>
-      <p><%= @upcoming_match.competition.name %> · <%= moscow_time(@upcoming_match.kickoff_at) %></p>
+      <p class="fixture-meta"><span><%= @upcoming_match.competition.name %></span><time datetime="<%= @upcoming_match.kickoff_at.iso8601 %>"><%= moscow_time(@upcoming_match.kickoff_at) %></time></p>
       <% if Time.current < @upcoming_match.forecast_opens_at %>
         <p class="muted">Прогноз откроется <%= moscow_time(@upcoming_match.forecast_opens_at) %>.</p>
       <% else %>

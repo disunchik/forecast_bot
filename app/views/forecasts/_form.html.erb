@@ -1,97 +1,111 @@
 <%= render "shared/errors", object: forecast %>
-<%= form_with model: [match, forecast], data: { controller: "first-score" } do |form| %>
-  <section class="card card-accent">
+<%= form_with model: [match, forecast], class: "forecast-form", aria: { describedby: forecast.errors.any? ? dom_id(forecast, :errors) : nil }, data: { controller: "first-score" } do |form| %>
+  <section class="form-section stake-section">
     <h2>1. Золотые баллы</h2>
-    <p>Доступно для этой ставки: <strong><%= @available_gold %> ЗБ</strong></p>
-    <% gold_percentage = match.match_result&.scoring_snapshot&.fetch("gold_percentage", nil) || ScoringRule.value_for("gold_percentage", 50) %>
-    <p class="muted">Засчитается максимум <%= gold_percentage %>% от обычных баллов за прогноз. Вся поставленная сумма будет списана после подтверждения результата.</p>
-    <div class="field" style="max-width:220px"><%= form.label :gold_points_stake, "Поставить ЗБ" %><%= form.number_field :gold_points_stake, min: 0, max: @available_gold, required: true %></div>
+    <div class="form-section-body">
+      <p>Доступно для этой ставки: <strong class="stake-available"><%= @available_gold %> ЗБ</strong></p>
+      <% gold_percentage = match.match_result&.scoring_snapshot&.fetch("gold_percentage", nil) || ScoringRule.value_for("gold_percentage", 50) %>
+      <p class="muted">Засчитается максимум <%= gold_percentage %>% от обычных баллов за прогноз. Вся поставленная сумма будет списана после подтверждения результата.</p>
+      <div class="field stake-field"><%= form.label :gold_points_stake, "Поставить ЗБ" %><%= form.number_field :gold_points_stake, min: 0, max: @available_gold, required: true %></div>
+    </div>
   </section>
 
   <% if (question = match.temporary_question) %>
-    <section class="card">
+    <section class="form-section">
       <h2>2. Временный вопрос</h2>
-      <p><strong><%= question.text %></strong> <span class="badge"><%= question.points %> б.</span></p>
-      <% if question.choice? %>
-        <div class="check-list">
-          <% question.options.each do |option| %>
-            <div class="check-item">
-              <%= form.radio_button :temporary_question_option_id, option.id, required: true %>
-              <%= form.label "temporary_question_option_id_#{option.id}", option.text %>
-            </div>
-          <% end %>
-        </div>
-      <% else %>
-        <div class="field"><%= form.label :temporary_answer_text, "Ваш ответ" %><%= form.text_field :temporary_answer_text, required: true, maxlength: 200 %></div>
-      <% end %>
+      <div class="form-section-body">
+        <p><strong><%= question.text %></strong> <span class="badge"><%= question.points %> б.</span></p>
+        <% if question.choice? %>
+          <div class="check-list">
+            <% question.options.each do |option| %>
+              <div class="check-item">
+                <%= form.radio_button :temporary_question_option_id, option.id, required: true %>
+                <%= form.label "temporary_question_option_id_#{option.id}", option.text %>
+              </div>
+            <% end %>
+          </div>
+        <% else %>
+          <div class="field"><%= form.label :temporary_answer_text, "Ваш ответ" %><%= form.text_field :temporary_answer_text, required: true, maxlength: 200 %></div>
+        <% end %>
+      </div>
     </section>
   <% end %>
 
-  <section class="card">
+  <section class="form-section">
     <h2><%= match.temporary_question ? "3" : "2" %>. Счёт первого тайма</h2>
-    <div class="score-fields">
-      <% score_teams(match).each_with_index do |(side, team), index| %>
-        <% if index.positive? %><strong>:</strong><% end %>
-        <div><%= form.label "halftime_#{side}", team %><%= form.number_field "halftime_#{side}", min: 0, required: true, data: { first_score_target: "halftime#{side.to_s.capitalize}", action: "input->first-score#update" } %></div>
-      <% end %>
-    </div>
-  </section>
-
-  <section class="card">
-    <h2><%= match.temporary_question ? "4" : "3" %>. Итоговый счёт</h2>
-    <p class="muted">Для кубковых матчей учитывайте дополнительное время. Серия пенальти не является голами матча.</p>
-    <div class="score-fields">
-      <% score_teams(match).each_with_index do |(side, team), index| %>
-        <% if index.positive? %><strong>:</strong><% end %>
-        <div><%= form.label "fulltime_#{side}", team %><%= form.number_field "fulltime_#{side}", min: 0, required: true, data: { first_score_target: "fulltime#{side.to_s.capitalize}", action: "input->first-score#update" } %></div>
-      <% end %>
-    </div>
-  </section>
-
-  <section class="card">
-    <h2><%= match.temporary_question ? "5" : "4" %>. Кто откроет счёт?</h2>
-    <p class="muted" data-first-score-target="hint"></p>
-    <div class="check-list">
-      <% [["roma", "Рома"], ["opponent", match.opponent], ["nobody", "Голов не будет"]].each do |value, label| %>
-        <div class="check-item"><%= form.radio_button :first_score, value, required: true, data: { first_score_target: "choice" } %><%= form.label "first_score_#{value}", label %></div>
-      <% end %>
-    </div>
-  </section>
-
-  <section class="card">
-    <h2><%= match.temporary_question ? "6" : "5" %>. Авторы голов Ромы</h2>
-    <p class="muted">Выберите не больше игроков, чем голов Ромы в итоговом прогнозе. Максимум — 8. Повторно выбирать игрока для дубля не нужно.</p>
-    <div class="check-list">
-      <% @players.each do |player| %>
-        <% usage = @limits.scorer_usage(player) %>
-        <% available = @limits.scorer_available?(player) || @selected_scorer_ids.include?(player.id) %>
-        <div class="check-item <%= "disabled" unless available %>">
-          <%= check_box_tag "forecast[scorer_ids][]", player.id, @selected_scorer_ids.include?(player.id), id: "scorer_#{player.id}", disabled: !available %>
-          <label for="scorer_<%= player.id %>"><%= player.name %> <span class="muted">(<%= usage %>/<%= @limits.limit %>)</span></label>
-        </div>
-      <% end %>
-    </div>
-  </section>
-
-  <section class="card">
-    <h2><%= match.temporary_question ? "7" : "6" %>. Авторы голевых передач</h2>
-    <p class="muted">Можно выбрать меньше вариантов, чем голов Ромы. «Без голевой передачи» считается отдельным вариантом.</p>
-    <div class="check-list">
-      <% @players.each do |player| %>
-        <% usage = @limits.assist_usage(player) %>
-        <% selected = @selected_assist_ids.include?(player.id) %>
-        <% available = @limits.assist_available?(player) || selected %>
-        <div class="check-item <%= "disabled" unless available %>">
-          <%= check_box_tag "forecast[assist_player_ids][]", player.id, selected, id: "assist_#{player.id}", disabled: !available %>
-          <label for="assist_<%= player.id %>"><%= player.name %> <span class="muted">(<%= usage %>/<%= @limits.limit %>)</span></label>
-        </div>
-      <% end %>
-      <div class="check-item">
-        <%= check_box_tag "forecast[no_assist]", "1", @selected_no_assist, id: "no_assist" %>
-        <label for="no_assist">Без голевой передачи</label>
+    <div class="form-section-body">
+      <div class="score-fields">
+        <% score_teams(match).each_with_index do |(side, team), index| %>
+          <% if index.positive? %><strong>:</strong><% end %>
+          <div><%= form.label "halftime_#{side}", team %><%= form.number_field "halftime_#{side}", aria: { invalid: forecast.errors["halftime_#{side}"].any?, describedby: forecast.errors.any? ? dom_id(forecast, :errors) : nil }, min: 0, inputmode: "numeric", required: true, data: { first_score_target: "halftime#{side.to_s.capitalize}", action: "input->first-score#update" } %></div>
+        <% end %>
       </div>
     </div>
   </section>
 
-  <div class="actions"><%= form.submit forecast.persisted? ? "Сохранить изменения" : "Отправить прогноз" %><%= link_to "Отмена", root_path, class: "button button-secondary" %></div>
+  <section class="form-section">
+    <h2><%= match.temporary_question ? "4" : "3" %>. Итоговый счёт</h2>
+    <div class="form-section-body">
+      <p class="muted">Для кубковых матчей учитывайте дополнительное время. Серия пенальти не является голами матча.</p>
+      <div class="score-fields">
+        <% score_teams(match).each_with_index do |(side, team), index| %>
+          <% if index.positive? %><strong>:</strong><% end %>
+          <div><%= form.label "fulltime_#{side}", team %><%= form.number_field "fulltime_#{side}", aria: { invalid: forecast.errors["fulltime_#{side}"].any?, describedby: forecast.errors.any? ? dom_id(forecast, :errors) : nil }, min: 0, inputmode: "numeric", required: true, data: { first_score_target: "fulltime#{side.to_s.capitalize}", action: "input->first-score#update" } %></div>
+        <% end %>
+      </div>
+    </div>
+  </section>
+
+  <section class="form-section">
+    <h2><%= match.temporary_question ? "5" : "4" %>. Кто откроет счёт?</h2>
+    <div class="form-section-body">
+      <p class="muted" data-first-score-target="hint"></p>
+      <div class="check-list">
+        <% [["roma", "Рома"], ["opponent", match.opponent], ["nobody", "Голов не будет"]].each do |value, label| %>
+          <div class="check-item"><%= form.radio_button :first_score, value, required: true, data: { first_score_target: "choice" } %><%= form.label "first_score_#{value}", label %></div>
+        <% end %>
+      </div>
+    </div>
+  </section>
+
+  <section class="form-section">
+    <h2><%= match.temporary_question ? "6" : "5" %>. Авторы голов Ромы</h2>
+    <div class="form-section-body">
+      <p class="muted">Выберите не больше игроков, чем голов Ромы в итоговом прогнозе. Максимум — 8. Повторно выбирать игрока для дубля не нужно.</p>
+      <div class="check-list">
+        <% @players.each do |player| %>
+          <% usage = @limits.scorer_usage(player) %>
+          <% available = @limits.scorer_available?(player) || @selected_scorer_ids.include?(player.id) %>
+          <div class="check-item <%= "disabled" unless available %>">
+            <%= check_box_tag "forecast[scorer_ids][]", player.id, @selected_scorer_ids.include?(player.id), id: "scorer_#{player.id}", disabled: !available %>
+            <label for="scorer_<%= player.id %>"><%= player.name %> <span class="muted">(<%= usage %>/<%= @limits.limit %>)</span></label>
+          </div>
+        <% end %>
+      </div>
+    </div>
+  </section>
+
+  <section class="form-section">
+    <h2><%= match.temporary_question ? "7" : "6" %>. Авторы голевых передач</h2>
+    <div class="form-section-body">
+      <p class="muted">Можно выбрать меньше вариантов, чем голов Ромы. «Без голевой передачи» считается отдельным вариантом.</p>
+      <div class="check-list">
+        <% @players.each do |player| %>
+          <% usage = @limits.assist_usage(player) %>
+          <% selected = @selected_assist_ids.include?(player.id) %>
+          <% available = @limits.assist_available?(player) || selected %>
+          <div class="check-item <%= "disabled" unless available %>">
+            <%= check_box_tag "forecast[assist_player_ids][]", player.id, selected, id: "assist_#{player.id}", disabled: !available %>
+            <label for="assist_<%= player.id %>"><%= player.name %> <span class="muted">(<%= usage %>/<%= @limits.limit %>)</span></label>
+          </div>
+        <% end %>
+        <div class="check-item">
+          <%= check_box_tag "forecast[no_assist]", "1", @selected_no_assist, id: "no_assist" %>
+          <label for="no_assist">Без голевой передачи</label>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <div class="actions forecast-submit"><%= form.submit forecast.persisted? ? "Сохранить изменения" : "Отправить прогноз" %><%= link_to "Отмена", root_path, class: "button button-secondary" %></div>
 <% end %>

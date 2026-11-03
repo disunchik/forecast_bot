@@ -1,14 +1,30 @@
-<%= render "admin/season_picker", url: admin_matches_path %>
 <%= render "admin/nav" %>
-<div class="actions" style="justify-content:space-between"><h1>Матчи</h1><%= link_to "Создать матч", new_admin_match_path, class: "button" %></div>
-<nav class="admin-nav">
-  <%= link_to "Все", admin_matches_path(season_id: @season&.id, filter: "all") %>
-  <%= link_to "Будущие", admin_matches_path(season_id: @season&.id, filter: "upcoming") %>
-  <%= link_to "Открытые", admin_matches_path(season_id: @season&.id, filter: "open") %>
-  <%= link_to "Закрытые", admin_matches_path(season_id: @season&.id, filter: "closed") %>
-  <%= link_to "Завершённые", admin_matches_path(season_id: @season&.id, filter: "finished") %>
-  <%= link_to "Отменённые", admin_matches_path(season_id: @season&.id, filter: "cancelled") %>
+<div class="page-heading">
+  <h1>Матчи</h1>
+  <%= link_to "Создать матч", new_admin_match_path, class: "button" %>
+</div>
+<%= render "admin/season_picker", url: admin_matches_path %>
+<nav class="admin-nav filters" aria-label="Статус матчей">
+  <% [["Все", "all"], ["Будущие", "upcoming"], ["Открытые", "open"], ["Закрытые", "closed"], ["Завершённые", "finished"], ["Отменённые", "cancelled"]].each do |label, filter| %>
+    <%= link_to label, admin_matches_path(season_id: @season&.id, filter: filter), aria: { current: @filter == filter ? "page" : nil } %>
+  <% end %>
 </nav>
-<div class="table-wrap"><table><thead><tr><th>№</th><th>Матч</th><th>Турнир</th><th>Начало</th><th>Статус</th><th>Прогнозов</th><th></th></tr></thead><tbody>
-<% @matches.each do |match| %><tr><td><%= match.forecast_number %></td><td><strong><%= match_title(match) %></strong></td><td><%= match.competition.name %></td><td><%= moscow_time(match.kickoff_at) %></td><td><%= match_status_label(match) %></td><td><%= match.forecasts.count %></td><td><%= link_to "Открыть", admin_match_path(match) %></td></tr><% end %>
-<% if @matches.empty? %><tr><td colspan="7" class="empty">Матчей по выбранному фильтру нет.</td></tr><% end %></tbody></table></div>
+<div class="table-wrap match-list-table" tabindex="0" role="region" aria-label="Список матчей с горизонтальной прокруткой">
+  <table>
+    <thead><tr><th scope="col" class="numeric">№</th><th scope="col">Матч</th><th scope="col">Турнир</th><th scope="col">Начало</th><th scope="col">Статус</th><th scope="col" class="numeric">Прогнозов</th><th scope="col"><span class="sr-only">Действие</span></th></tr></thead>
+    <tbody>
+      <% @matches.each do |match| %>
+        <tr>
+          <td class="numeric"><%= match.forecast_number %></td>
+          <td><strong><%= match_title(match) %></strong></td>
+          <td><%= match.competition.name %></td>
+          <td><%= moscow_time(match.kickoff_at) %></td>
+          <td><span class="badge"><%= match_status_label(match) %></span></td>
+          <td class="numeric"><%= match.forecasts.count %></td>
+          <td><%= link_to "Открыть", admin_match_path(match) %></td>
+        </tr>
+      <% end %>
+      <% if @matches.empty? %><tr><td colspan="7" class="empty">Матчей по выбранному фильтру нет.</td></tr><% end %>
+    </tbody>
+  </table>
+</div>

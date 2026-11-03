@@ -1,7 +1,7 @@
 <%= render "admin/nav" %>
 <h1>Удаление матча №<%= @match.forecast_number %></h1>
 <div class="card">
-  <h2><%= match_title(@match) %> · <%= @match.season.name %></h2>
+  <h2 class="section-heading"><%= match_title(@match) %> · <%= @match.season.name %></h2>
   <p>Матч и все его <strong><%= @match.forecasts.count %></strong> прогнозов будут удалены. Ставки этого матча освободятся. Выданные ЗБ и история финансовых операций останутся; копия данных попадёт в журнал администратора.</p>
   <% if @deletion.affected_matches.exists? %>
     <h3>Сначала будут отменены расчёты:</h3>

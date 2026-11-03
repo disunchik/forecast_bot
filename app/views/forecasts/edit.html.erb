@@ -1,3 +1,5 @@
-<h1>Изменить прогноз: <%= match_title(@match) %></h1>
-<p class="muted">Для тай-брейка будет учитываться время этого последнего сохранения.</p>
-<div class="cards"><%= render "form", forecast: @forecast, match: @match %></div>
+<div class="forecast-page"><div class="page-heading"><h1>Изменить прогноз: <%= match_title(@match) %></h1></div>
+<p class="muted forecast-context">Для тай-брейка будет учитываться время этого последнего сохранения.</p>
+<div><%= render "form", forecast: @forecast, match: @match %></div>
+
+</div>

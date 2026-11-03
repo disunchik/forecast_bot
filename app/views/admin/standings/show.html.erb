@@ -1,7 +1,7 @@
 <%= render "admin/nav" %><h1>Таблица сезона</h1>
 <%= render "admin/season_picker", url: admin_standings_path %>
 <% if @snapshots.any? %>
-  <%= form_with url: admin_standings_path, method: :get, class: "actions" do |form| %>
+  <%= form_with url: admin_standings_path, method: :get, class: "actions season-picker" do |form| %>
     <%= form.hidden_field :season_id, value: @season.id %>
     <%= form.label :snapshot_id, "Таблица после матча" %>
     <%= form.select :snapshot_id, @snapshots.map { |s| ["№#{s.match.forecast_number}", s.id] }, selected: @snapshot&.id %>

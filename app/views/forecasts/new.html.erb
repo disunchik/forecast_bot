@@ -1,3 +1,5 @@
-<h1>Прогноз: <%= match_title(@match) %></h1>
-<p class="muted"><%= @match.competition.name %> · Матч №<%= @match.forecast_number %> · Закрытие <%= moscow_time(@match.forecast_closes_at) %></p>
-<div class="cards"><%= render "form", forecast: @forecast, match: @match %></div>
+<div class="forecast-page"><div class="page-heading"><h1>Прогноз: <%= match_title(@match) %></h1></div>
+<div class="forecast-context"><span><%= @match.competition.name %></span><span>Матч №<%= @match.forecast_number %></span><strong>Закрытие (МСК) <%= moscow_time(@match.forecast_closes_at) %></strong></div>
+<div><%= render "form", forecast: @forecast, match: @match %></div>
+
+</div>

@@ -1,12 +1,26 @@
-<h1>Туры текущего сезона</h1>
-<div class="cards">
+<div class="page-heading">
+  <h1>Туры текущего сезона</h1>
+</div>
+<div class="fixture-list">
   <% if @matches.empty? %><div class="card empty">Матчи текущего сезона пока не добавлены.</div><% end %>
   <% @matches.each do |match| %>
-    <div class="card">
-      <div><span class="badge">№<%= match.forecast_number %></span> <span class="badge"><%= match.competition.name %></span></div>
-      <h3><%= match_title(match) %></h3>
-      <p class="muted"><%= moscow_time(match.kickoff_at) %> · <%= match_status_label(match) %></p>
-      <% if match.predictions_visible_to_all? %><%= link_to "Открыть тур", round_path(match), class: "button button-small" %><% else %><span class="muted">Прогнозы пока скрыты</span><% end %>
-    </div>
+    <article class="fixture-row">
+      <div class="fixture-number numeric">№<%= match.forecast_number %></div>
+      <div class="fixture-main">
+        <h2><%= match_title(match) %></h2>
+        <div class="fixture-meta">
+          <span><%= match.competition.name %></span>
+          <span><%= moscow_time(match.kickoff_at) %></span>
+          <span class="badge"><%= match_status_label(match) %></span>
+        </div>
+      </div>
+      <div class="fixture-actions">
+        <% if match.predictions_visible_to_all? %>
+          <%= link_to "Открыть тур", round_path(match), class: "button button-small" %>
+        <% else %>
+          <span class="muted">Прогнозы пока скрыты</span>
+        <% end %>
+      </div>
+    </article>
   <% end %>
 </div>

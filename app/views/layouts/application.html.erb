@@ -18,12 +18,13 @@
     <%= stylesheet_link_tag :app, "data-turbo-track": "reload" %>
     <%= javascript_importmap_tags %>
   </head>
-  <body>
+  <body class="<%= "admin-area" if controller_path.start_with?("admin/") %>">
+    <a href="#main-content" class="skip-link" data-turbo="false">К содержимому</a>
     <header class="site-header">
       <div class="shell header-inner">
         <%= link_to root_path, class: "brand" do %>
           <%= image_tag "roma-crest.png", alt: "Эмблема AS Roma", width: 42, height: 55, class: "brand-crest" %>
-          <span>AS Roma сайт прогнозистов</span>
+          <span class="brand-name">AS Roma <span>сайт прогнозистов</span></span>
         <% end %>
         <% if authenticated? %>
           <nav class="main-nav" aria-label="Основная навигация">
@@ -37,10 +38,19 @@
       </div>
     </header>
 
-    <main class="shell page">
-      <% if flash[:notice] %><div class="alert alert-success"><%= flash[:notice] %></div><% end %>
-      <% if flash[:alert] %><div class="alert alert-error"><%= flash[:alert] %></div><% end %>
-      <%= yield %>
-    </main>
+    <div class="page-scene">
+      <div class="club-backdrop" aria-hidden="true">
+        <%= image_tag "roma-heritage-2011-12.jpg", alt: "", width: 1600, height: 1065, decoding: "async", class: "club-backdrop-photo" %>
+      </div>
+      <main id="main-content" class="shell page" tabindex="-1">
+        <% if flash[:notice] %><div class="alert alert-success" role="status"><%= flash[:notice] %></div><% end %>
+        <% if flash[:alert] %><div class="alert alert-error" role="alert"><%= flash[:alert] %></div><% end %>
+        <%= yield %>
+      </main>
+      <footer class="shell site-footer">
+        <p lang="it">Daje Roma</p>
+        <a href="https://www.asroma.com/en/news/55859/a-career-in-photos-16-of-the-best-de-rossi-shots" target="_blank" rel="noopener noreferrer">Фото: архив AS Roma<span class="sr-only"> (откроется в новой вкладке)</span></a>
+      </footer>
+    </div>
   </body>
 </html>

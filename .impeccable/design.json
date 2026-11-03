@@ -1,0 +1,616 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-11-03T16:17:59.291509+00:00",
+  "title": "Design System: Roma Matchday",
+  "extensions": {
+    "colorMeta": {
+      "roma": {
+        "role": "primary",
+        "displayName": "roma",
+        "canonical": "#7a1732",
+        "tonalRamp": [
+          "oklch(15.0% 0.0374 10.8)",
+          "oklch(27.0% 0.0759 10.8)",
+          "oklch(39.0% 0.1048 10.8)",
+          "oklch(51.0% 0.1190 10.8)",
+          "oklch(63.0% 0.1161 10.8)",
+          "oklch(75.0% 0.0966 10.8)",
+          "oklch(87.0% 0.0638 10.8)",
+          "oklch(95.0% 0.0374 10.8)"
+        ]
+      },
+      "roma-dark": {
+        "role": "primary",
+        "displayName": "roma-dark",
+        "canonical": "#4f0f22",
+        "tonalRamp": [
+          "oklch(15.0% 0.0374 7.9)",
+          "oklch(27.0% 0.0759 7.9)",
+          "oklch(39.0% 0.0948 7.9)",
+          "oklch(51.0% 0.0948 7.9)",
+          "oklch(63.0% 0.0948 7.9)",
+          "oklch(75.0% 0.0948 7.9)",
+          "oklch(87.0% 0.0638 7.9)",
+          "oklch(95.0% 0.0374 7.9)"
+        ]
+      },
+      "gold": {
+        "role": "secondary",
+        "displayName": "gold",
+        "canonical": "#f0b323",
+        "tonalRamp": [
+          "oklch(15.0% 0.0374 82.4)",
+          "oklch(27.0% 0.0759 82.4)",
+          "oklch(39.0% 0.1048 82.4)",
+          "oklch(51.0% 0.1190 82.4)",
+          "oklch(63.0% 0.1161 82.4)",
+          "oklch(75.0% 0.0966 82.4)",
+          "oklch(87.0% 0.0638 82.4)",
+          "oklch(95.0% 0.0374 82.4)"
+        ]
+      },
+      "paper": {
+        "role": "neutral",
+        "displayName": "paper",
+        "canonical": "#f8f5ef",
+        "tonalRamp": [
+          "oklch(15.0% 0.0086 84.6)",
+          "oklch(27.0% 0.0086 84.6)",
+          "oklch(39.0% 0.0086 84.6)",
+          "oklch(51.0% 0.0086 84.6)",
+          "oklch(63.0% 0.0086 84.6)",
+          "oklch(75.0% 0.0086 84.6)",
+          "oklch(87.0% 0.0086 84.6)",
+          "oklch(95.0% 0.0086 84.6)"
+        ]
+      },
+      "ink": {
+        "role": "neutral",
+        "displayName": "ink",
+        "canonical": "#25191c",
+        "tonalRamp": [
+          "oklch(15.0% 0.0199 2.2)",
+          "oklch(27.0% 0.0199 2.2)",
+          "oklch(39.0% 0.0199 2.2)",
+          "oklch(51.0% 0.0199 2.2)",
+          "oklch(63.0% 0.0199 2.2)",
+          "oklch(75.0% 0.0199 2.2)",
+          "oklch(87.0% 0.0199 2.2)",
+          "oklch(95.0% 0.0199 2.2)"
+        ]
+      },
+      "muted": {
+        "role": "neutral",
+        "displayName": "muted",
+        "canonical": "#6d6064",
+        "tonalRamp": [
+          "oklch(15.0% 0.0177 357.2)",
+          "oklch(27.0% 0.0177 357.2)",
+          "oklch(39.0% 0.0177 357.2)",
+          "oklch(51.0% 0.0177 357.2)",
+          "oklch(63.0% 0.0177 357.2)",
+          "oklch(75.0% 0.0177 357.2)",
+          "oklch(87.0% 0.0177 357.2)",
+          "oklch(95.0% 0.0177 357.2)"
+        ]
+      },
+      "line": {
+        "role": "neutral",
+        "displayName": "line",
+        "canonical": "#dcd4cf",
+        "tonalRamp": [
+          "oklch(15.0% 0.0112 54.5)",
+          "oklch(27.0% 0.0112 54.5)",
+          "oklch(39.0% 0.0112 54.5)",
+          "oklch(51.0% 0.0112 54.5)",
+          "oklch(63.0% 0.0112 54.5)",
+          "oklch(75.0% 0.0112 54.5)",
+          "oklch(87.0% 0.0112 54.5)",
+          "oklch(95.0% 0.0112 54.5)"
+        ]
+      },
+      "rule-strong": {
+        "role": "neutral",
+        "displayName": "rule-strong",
+        "canonical": "#a99b95",
+        "tonalRamp": [
+          "oklch(15.0% 0.0187 44.7)",
+          "oklch(27.0% 0.0187 44.7)",
+          "oklch(39.0% 0.0187 44.7)",
+          "oklch(51.0% 0.0187 44.7)",
+          "oklch(63.0% 0.0187 44.7)",
+          "oklch(75.0% 0.0187 44.7)",
+          "oklch(87.0% 0.0187 44.7)",
+          "oklch(95.0% 0.0187 44.7)"
+        ]
+      },
+      "card": {
+        "role": "neutral",
+        "displayName": "card",
+        "canonical": "#fffdf9",
+        "tonalRamp": [
+          "oklch(15.0% 0.0057 84.6)",
+          "oklch(27.0% 0.0057 84.6)",
+          "oklch(39.0% 0.0057 84.6)",
+          "oklch(51.0% 0.0057 84.6)",
+          "oklch(63.0% 0.0057 84.6)",
+          "oklch(75.0% 0.0057 84.6)",
+          "oklch(87.0% 0.0057 84.6)",
+          "oklch(95.0% 0.0057 84.6)"
+        ]
+      },
+      "on-brand": {
+        "role": "neutral",
+        "displayName": "on-brand",
+        "canonical": "#fffaf3",
+        "tonalRamp": [
+          "oklch(15.0% 0.0107 76.6)",
+          "oklch(27.0% 0.0107 76.6)",
+          "oklch(39.0% 0.0107 76.6)",
+          "oklch(51.0% 0.0107 76.6)",
+          "oklch(63.0% 0.0107 76.6)",
+          "oklch(75.0% 0.0107 76.6)",
+          "oklch(87.0% 0.0107 76.6)",
+          "oklch(95.0% 0.0107 76.6)"
+        ]
+      },
+      "brand-muted": {
+        "role": "neutral",
+        "displayName": "brand-muted",
+        "canonical": "#f0d9df",
+        "tonalRamp": [
+          "oklch(15.0% 0.0266 360.0)",
+          "oklch(27.0% 0.0266 360.0)",
+          "oklch(39.0% 0.0266 360.0)",
+          "oklch(51.0% 0.0266 360.0)",
+          "oklch(63.0% 0.0266 360.0)",
+          "oklch(75.0% 0.0266 360.0)",
+          "oklch(87.0% 0.0266 360.0)",
+          "oklch(95.0% 0.0266 360.0)"
+        ]
+      },
+      "secondary": {
+        "role": "neutral",
+        "displayName": "secondary",
+        "canonical": "#eee8e2",
+        "tonalRamp": [
+          "oklch(15.0% 0.0104 67.7)",
+          "oklch(27.0% 0.0104 67.7)",
+          "oklch(39.0% 0.0104 67.7)",
+          "oklch(51.0% 0.0104 67.7)",
+          "oklch(63.0% 0.0104 67.7)",
+          "oklch(75.0% 0.0104 67.7)",
+          "oklch(87.0% 0.0104 67.7)",
+          "oklch(95.0% 0.0104 67.7)"
+        ]
+      },
+      "secondary-hover": {
+        "role": "neutral",
+        "displayName": "secondary-hover",
+        "canonical": "#e2d8d0",
+        "tonalRamp": [
+          "oklch(15.0% 0.0155 61.3)",
+          "oklch(27.0% 0.0155 61.3)",
+          "oklch(39.0% 0.0155 61.3)",
+          "oklch(51.0% 0.0155 61.3)",
+          "oklch(63.0% 0.0155 61.3)",
+          "oklch(75.0% 0.0155 61.3)",
+          "oklch(87.0% 0.0155 61.3)",
+          "oklch(95.0% 0.0155 61.3)"
+        ]
+      },
+      "gold-button": {
+        "role": "secondary",
+        "displayName": "gold-button",
+        "canonical": "#f0b323",
+        "tonalRamp": [
+          "oklch(15.0% 0.0374 82.4)",
+          "oklch(27.0% 0.0759 82.4)",
+          "oklch(39.0% 0.1048 82.4)",
+          "oklch(51.0% 0.1190 82.4)",
+          "oklch(63.0% 0.1161 82.4)",
+          "oklch(75.0% 0.0966 82.4)",
+          "oklch(87.0% 0.0638 82.4)",
+          "oklch(95.0% 0.0374 82.4)"
+        ]
+      },
+      "gold-button-hover": {
+        "role": "secondary",
+        "displayName": "gold-button-hover",
+        "canonical": "#ffd065",
+        "tonalRamp": [
+          "oklch(15.0% 0.0374 85.6)",
+          "oklch(27.0% 0.0759 85.6)",
+          "oklch(39.0% 0.1048 85.6)",
+          "oklch(51.0% 0.1190 85.6)",
+          "oklch(63.0% 0.1161 85.6)",
+          "oklch(75.0% 0.0966 85.6)",
+          "oklch(87.0% 0.0638 85.6)",
+          "oklch(95.0% 0.0374 85.6)"
+        ]
+      },
+      "field-border": {
+        "role": "neutral",
+        "displayName": "field-border",
+        "canonical": "#8b7b7f",
+        "tonalRamp": [
+          "oklch(15.0% 0.0205 0.8)",
+          "oklch(27.0% 0.0205 0.8)",
+          "oklch(39.0% 0.0205 0.8)",
+          "oklch(51.0% 0.0205 0.8)",
+          "oklch(63.0% 0.0205 0.8)",
+          "oklch(75.0% 0.0205 0.8)",
+          "oklch(87.0% 0.0205 0.8)",
+          "oklch(95.0% 0.0205 0.8)"
+        ]
+      },
+      "disabled-surface": {
+        "role": "neutral",
+        "displayName": "disabled-surface",
+        "canonical": "#eee6e7",
+        "tonalRamp": [
+          "oklch(15.0% 0.0088 8.6)",
+          "oklch(27.0% 0.0088 8.6)",
+          "oklch(39.0% 0.0088 8.6)",
+          "oklch(51.0% 0.0088 8.6)",
+          "oklch(63.0% 0.0088 8.6)",
+          "oklch(75.0% 0.0088 8.6)",
+          "oklch(87.0% 0.0088 8.6)",
+          "oklch(95.0% 0.0088 8.6)"
+        ]
+      },
+      "success-surface": {
+        "role": "tertiary",
+        "displayName": "success-surface",
+        "canonical": "#e7f5ed",
+        "tonalRamp": [
+          "oklch(15.0% 0.0182 161.1)",
+          "oklch(27.0% 0.0182 161.1)",
+          "oklch(39.0% 0.0182 161.1)",
+          "oklch(51.0% 0.0182 161.1)",
+          "oklch(63.0% 0.0182 161.1)",
+          "oklch(75.0% 0.0182 161.1)",
+          "oklch(87.0% 0.0182 161.1)",
+          "oklch(95.0% 0.0182 161.1)"
+        ]
+      },
+      "success-line": {
+        "role": "tertiary",
+        "displayName": "success-line",
+        "canonical": "#92bca3",
+        "tonalRamp": [
+          "oklch(15.0% 0.0374 158.6)",
+          "oklch(27.0% 0.0574 158.6)",
+          "oklch(39.0% 0.0574 158.6)",
+          "oklch(51.0% 0.0574 158.6)",
+          "oklch(63.0% 0.0574 158.6)",
+          "oklch(75.0% 0.0574 158.6)",
+          "oklch(87.0% 0.0574 158.6)",
+          "oklch(95.0% 0.0374 158.6)"
+        ]
+      },
+      "ok": {
+        "role": "tertiary",
+        "displayName": "ok",
+        "canonical": "#176b45",
+        "tonalRamp": [
+          "oklch(15.0% 0.0374 158.4)",
+          "oklch(27.0% 0.0759 158.4)",
+          "oklch(39.0% 0.0994 158.4)",
+          "oklch(51.0% 0.0994 158.4)",
+          "oklch(63.0% 0.0994 158.4)",
+          "oklch(75.0% 0.0966 158.4)",
+          "oklch(87.0% 0.0638 158.4)",
+          "oklch(95.0% 0.0374 158.4)"
+        ]
+      },
+      "error-surface": {
+        "role": "tertiary",
+        "displayName": "error-surface",
+        "canonical": "#fff0f0",
+        "tonalRamp": [
+          "oklch(15.0% 0.0162 17.4)",
+          "oklch(27.0% 0.0162 17.4)",
+          "oklch(39.0% 0.0162 17.4)",
+          "oklch(51.0% 0.0162 17.4)",
+          "oklch(63.0% 0.0162 17.4)",
+          "oklch(75.0% 0.0162 17.4)",
+          "oklch(87.0% 0.0162 17.4)",
+          "oklch(95.0% 0.0162 17.4)"
+        ]
+      },
+      "error-line": {
+        "role": "tertiary",
+        "displayName": "error-line",
+        "canonical": "#d59a9a",
+        "tonalRamp": [
+          "oklch(15.0% 0.0374 18.9)",
+          "oklch(27.0% 0.0710 18.9)",
+          "oklch(39.0% 0.0710 18.9)",
+          "oklch(51.0% 0.0710 18.9)",
+          "oklch(63.0% 0.0710 18.9)",
+          "oklch(75.0% 0.0710 18.9)",
+          "oklch(87.0% 0.0638 18.9)",
+          "oklch(95.0% 0.0374 18.9)"
+        ]
+      },
+      "danger": {
+        "role": "tertiary",
+        "displayName": "danger",
+        "canonical": "#a02626",
+        "tonalRamp": [
+          "oklch(15.0% 0.0374 25.8)",
+          "oklch(27.0% 0.0759 25.8)",
+          "oklch(39.0% 0.1048 25.8)",
+          "oklch(51.0% 0.1190 25.8)",
+          "oklch(63.0% 0.1161 25.8)",
+          "oklch(75.0% 0.0966 25.8)",
+          "oklch(87.0% 0.0638 25.8)",
+          "oklch(95.0% 0.0374 25.8)"
+        ]
+      },
+      "danger-hover": {
+        "role": "tertiary",
+        "displayName": "danger-hover",
+        "canonical": "#7d1d1d",
+        "tonalRamp": [
+          "oklch(15.0% 0.0374 25.6)",
+          "oklch(27.0% 0.0759 25.6)",
+          "oklch(39.0% 0.1048 25.6)",
+          "oklch(51.0% 0.1190 25.6)",
+          "oklch(63.0% 0.1161 25.6)",
+          "oklch(75.0% 0.0966 25.6)",
+          "oklch(87.0% 0.0638 25.6)",
+          "oklch(95.0% 0.0374 25.6)"
+        ]
+      },
+      "open-surface": {
+        "role": "tertiary",
+        "displayName": "open-surface",
+        "canonical": "#e5f3e9",
+        "tonalRamp": [
+          "oklch(15.0% 0.0199 154.9)",
+          "oklch(27.0% 0.0199 154.9)",
+          "oklch(39.0% 0.0199 154.9)",
+          "oklch(51.0% 0.0199 154.9)",
+          "oklch(63.0% 0.0199 154.9)",
+          "oklch(75.0% 0.0199 154.9)",
+          "oklch(87.0% 0.0199 154.9)",
+          "oklch(95.0% 0.0199 154.9)"
+        ]
+      },
+      "open-ink": {
+        "role": "tertiary",
+        "displayName": "open-ink",
+        "canonical": "#185f3f",
+        "tonalRamp": [
+          "oklch(15.0% 0.0374 159.3)",
+          "oklch(27.0% 0.0759 159.3)",
+          "oklch(39.0% 0.0874 159.3)",
+          "oklch(51.0% 0.0874 159.3)",
+          "oklch(63.0% 0.0874 159.3)",
+          "oklch(75.0% 0.0874 159.3)",
+          "oklch(87.0% 0.0638 159.3)",
+          "oklch(95.0% 0.0374 159.3)"
+        ]
+      },
+      "gold-surface": {
+        "role": "secondary",
+        "displayName": "gold-surface",
+        "canonical": "#f9edc9",
+        "tonalRamp": [
+          "oklch(15.0% 0.0374 91.8)",
+          "oklch(27.0% 0.0487 91.8)",
+          "oklch(39.0% 0.0487 91.8)",
+          "oklch(51.0% 0.0487 91.8)",
+          "oklch(63.0% 0.0487 91.8)",
+          "oklch(75.0% 0.0487 91.8)",
+          "oklch(87.0% 0.0487 91.8)",
+          "oklch(95.0% 0.0374 91.8)"
+        ]
+      },
+      "gold-ink": {
+        "role": "secondary",
+        "displayName": "gold-ink",
+        "canonical": "#6b4800",
+        "tonalRamp": [
+          "oklch(15.0% 0.0374 77.0)",
+          "oklch(27.0% 0.0759 77.0)",
+          "oklch(39.0% 0.0899 77.0)",
+          "oklch(51.0% 0.0899 77.0)",
+          "oklch(63.0% 0.0899 77.0)",
+          "oklch(75.0% 0.0899 77.0)",
+          "oklch(87.0% 0.0638 77.0)",
+          "oklch(95.0% 0.0374 77.0)"
+        ]
+      },
+      "table-head": {
+        "role": "neutral",
+        "displayName": "table-head",
+        "canonical": "#eee8e2",
+        "tonalRamp": [
+          "oklch(15.0% 0.0104 67.7)",
+          "oklch(27.0% 0.0104 67.7)",
+          "oklch(39.0% 0.0104 67.7)",
+          "oklch(51.0% 0.0104 67.7)",
+          "oklch(63.0% 0.0104 67.7)",
+          "oklch(75.0% 0.0104 67.7)",
+          "oklch(87.0% 0.0104 67.7)",
+          "oklch(95.0% 0.0104 67.7)"
+        ]
+      },
+      "current-row": {
+        "role": "neutral",
+        "displayName": "current-row",
+        "canonical": "#f6eddf",
+        "tonalRamp": [
+          "oklch(15.0% 0.0210 79.1)",
+          "oklch(27.0% 0.0210 79.1)",
+          "oklch(39.0% 0.0210 79.1)",
+          "oklch(51.0% 0.0210 79.1)",
+          "oklch(63.0% 0.0210 79.1)",
+          "oklch(75.0% 0.0210 79.1)",
+          "oklch(87.0% 0.0210 79.1)",
+          "oklch(95.0% 0.0210 79.1)"
+        ]
+      },
+      "heritage-ground": {
+        "role": "neutral",
+        "displayName": "heritage-ground",
+        "canonical": "#e6e0d5"
+      }
+    },
+    "typographyMeta": {
+      "headline": {
+        "displayName": "headline",
+        "purpose": "Заголовок страницы."
+      },
+      "title": {
+        "displayName": "title",
+        "purpose": "Заголовок секции."
+      },
+      "body": {
+        "displayName": "body",
+        "purpose": "Рабочий текст и ввод."
+      },
+      "label": {
+        "displayName": "label",
+        "purpose": "Навигация и метаданные."
+      }
+    },
+    "shadows": [],
+    "motion": [],
+    "breakpoints": [
+      {
+        "name": "admin-medium",
+        "value": "960px"
+      },
+      {
+        "name": "mobile",
+        "value": "760px"
+      },
+      {
+        "name": "narrow",
+        "value": "360px"
+      }
+    ],
+    "previewNotes": "Тональные ramp синтезированы только для панели документации; приложение использует точные цвета из DESIGN.md. Высоты токенов компонентов описывают минимумы. Образцы не являются аккаунтами, реальными матчами или измерениями."
+  },
+  "components": [
+    {
+      "name": "Первичная кнопка",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "Действие рабочего интерфейса; hover, focus, active и disabled поддержаны.",
+      "html": "<button type=\"button\" class=\"ds-button-primary\">Сохранить прогноз</button>",
+      "css": ".ds-button-primary{font:700 1rem/1.25 ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif;display:inline-flex;align-items:center;justify-content:center;min-height:48px;padding:12px 20px;border:1px solid transparent;border-radius:var(--radius-control,6px);cursor:pointer;text-decoration:none;background:var(--roma,#7a1732);color:var(--on-brand,#fffaf3);}.ds-button-primary:hover{background:var(--roma-dark,#4f0f22);} .ds-button-primary:focus-visible{outline:2px solid var(--roma,#7a1732);outline-offset:3px;} .ds-button-primary:active{outline:2px solid currentColor;outline-offset:-4px;} .ds-button-primary:disabled{opacity:.55;cursor:not-allowed;}"
+    },
+    {
+      "name": "Вторичная кнопка",
+      "kind": "button",
+      "refersTo": "button-secondary",
+      "description": "Действие рабочего интерфейса; hover, focus, active и disabled поддержаны.",
+      "html": "<button type=\"button\" class=\"ds-button-secondary\">Сохранить прогноз</button>",
+      "css": ".ds-button-secondary{font:700 1rem/1.25 ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif;display:inline-flex;align-items:center;justify-content:center;min-height:48px;padding:12px 20px;border:1px solid transparent;border-radius:var(--radius-control,6px);cursor:pointer;text-decoration:none;background:var(--secondary,#eee8e2);color:var(--ink,#25191c);border-color:var(--field-border,#8b7b7f);}.ds-button-secondary:hover{background:var(--secondary-hover,#e2d8d0);} .ds-button-secondary:focus-visible{outline:2px solid var(--roma,#7a1732);outline-offset:3px;} .ds-button-secondary:active{outline:2px solid currentColor;outline-offset:-4px;} .ds-button-secondary:disabled{opacity:.55;cursor:not-allowed;}"
+    },
+    {
+      "name": "Золотая кнопка",
+      "kind": "button",
+      "refersTo": "button-gold",
+      "description": "Действие рабочего интерфейса; hover, focus, active и disabled поддержаны.",
+      "html": "<button type=\"button\" class=\"ds-button-gold\">Сохранить прогноз</button>",
+      "css": ".ds-button-gold{font:700 1rem/1.25 ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif;display:inline-flex;align-items:center;justify-content:center;min-height:48px;padding:12px 20px;border:1px solid transparent;border-radius:var(--radius-control,6px);cursor:pointer;text-decoration:none;background:var(--gold-button,#f0b323);color:var(--ink,#25191c);}.ds-button-gold:hover{background:var(--gold-button-hover,#ffd065);} .ds-button-gold:focus-visible{outline:2px solid var(--roma,#7a1732);outline-offset:3px;} .ds-button-gold:active{outline:2px solid currentColor;outline-offset:-4px;} .ds-button-gold:disabled{opacity:.55;cursor:not-allowed;}"
+    },
+    {
+      "name": "Подписанное поле",
+      "kind": "input",
+      "refersTo": "input",
+      "description": "Нативное поле с постоянной подписью и ошибкой.",
+      "html": "<label class=\"ds-label\" for=\"ds-stake\">Поставить ЗБ</label><input class=\"ds-input\" id=\"ds-stake\" type=\"number\" min=\"0\" aria-describedby=\"ds-help\"><p class=\"ds-help\" id=\"ds-help\">Ставка ограничена доступной суммой.</p>",
+      "css": ".ds-label{display:block;margin-bottom:8px;font:500 1rem/1.5 ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif;color:var(--ink,#25191c);} .ds-input{width:100%;min-height:48px;padding:12px;border:1px solid var(--field-border,#8b7b7f);border-radius:var(--radius-control,6px);background:var(--card,#fffdf9);color:var(--ink,#25191c);font:1rem/1.5 ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif;} .ds-input:hover{background:var(--paper,#f8f5ef);} .ds-input:focus-visible{outline:2px solid var(--roma,#7a1732);outline-offset:3px;} .ds-input[aria-invalid=\"true\"]{border-color:var(--danger,#a02626);} .ds-help{font: .9375rem/1.5 ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif;color:var(--muted,#6d6064);}"
+    },
+    {
+      "name": "Административная навигация",
+      "kind": "nav",
+      "refersTo": "admin-nav",
+      "description": "Текстовые ссылки фиксированного порядка; текущий раздел выделен.",
+      "html": "<nav class=\"ds-nav\" aria-label=\"Разделы админки\"><a href=\"#overview\" aria-current=\"page\">Обзор</a><a href=\"#matches\">Матчи</a><a href=\"#results\">Результаты</a></nav>",
+      "css": ".ds-nav{display:flex;flex-wrap:wrap;gap:8px;font:.9375rem/1.5 ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif;} .ds-nav a{display:inline-flex;align-items:center;justify-content:center;min-height:52px;padding:8px 12px;border:1px solid var(--line,#dcd4cf);border-radius:var(--radius-control,6px);background:var(--card,#fffdf9);color:var(--ink,#25191c);font-weight:500;text-decoration:none;} .ds-nav a:hover{background:var(--secondary,#eee8e2);} .ds-nav a[aria-current=\"page\"]{background:var(--roma,#7a1732);color:var(--on-brand,#fffaf3);border-color:var(--roma,#7a1732);} .ds-nav a:focus-visible{outline:2px solid var(--roma,#7a1732);outline-offset:3px;}"
+    },
+    {
+      "name": "Открытый статус",
+      "kind": "chip",
+      "refersTo": "badge-open",
+      "description": "Статус передаётся текстом и семантическим цветом; не интерактивен.",
+      "html": "<span class=\"ds-badge\">Прогноз открыт</span>",
+      "css": ".ds-badge{display:inline-flex;align-items:center;gap:4px;padding:4px 8px;border-radius:var(--radius-control,6px);background:var(--open-surface,#e5f3e9);color:var(--open-ink,#185f3f);font:500 .8125rem/1.5 ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif;}"
+    },
+    {
+      "name": "Карточка профиля",
+      "kind": "card",
+      "refersTo": "profile-card",
+      "description": "Связанная пара подписи и числового значения; ачивки ведут в подробности.",
+      "html": "<a class=\"ds-card\" href=\"#achievements\"><span class=\"ds-caption\">Ачивки</span><span class=\"ds-stat\">—</span></a>",
+      "css": ".ds-card{display:flex;flex-direction:column;justify-content:space-between;gap:12px;min-height:148px;padding:24px;border:1px solid var(--line,#dcd4cf);border-radius:var(--radius-panel,10px);background:var(--card,#fffdf9);color:var(--ink,#25191c);font:1rem/1.5 ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif;text-decoration:none;} .ds-caption{color:var(--muted,#6d6064);} .ds-stat{color:var(--roma,#7a1732);font-size:2.5rem;font-weight:700;line-height:1.15;font-variant-numeric:tabular-nums;} .ds-card:hover{background:var(--gold-surface,#f9edc9);} .ds-card:focus-visible{outline:2px solid var(--roma,#7a1732);outline-offset:3px;}"
+    },
+    {
+      "name": "Матч и дедлайн",
+      "kind": "custom",
+      "refersTo": "match-panel",
+      "description": "Самодостаточный структурный образец; матч и время заполняются реальными данными.",
+      "html": "<article class=\"ds-match\"><div class=\"ds-match-main\"><h2>Матч AS Roma</h2><p>Номер и турнир — из данных матча</p></div><div class=\"ds-deadline\"><span>Прогноз открыт</span><p>Приём до (МСК):<br><strong>Время из данных матча</strong></p><a href=\"#forecast\">Сделать прогноз</a></div></article>",
+      "css": ".ds-match{display:grid;grid-template-columns:minmax(0,1fr) 300px;overflow:clip;border:1px solid var(--line,#dcd4cf);border-radius:var(--radius-panel,10px);background:var(--card,#fffdf9);color:var(--ink,#25191c);font:1rem/1.5 ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif;} .ds-match-main{padding:32px;align-self:center;} .ds-match-main h2{margin:0 0 20px;font-size:2.75rem;line-height:1.1;letter-spacing:-.03em;} .ds-match-main p{color:var(--muted,#6d6064);margin:0;} .ds-deadline{display:flex;flex-direction:column;align-items:flex-start;gap:20px;padding:28px;background:var(--roma,#7a1732);color:var(--on-brand,#fffaf3);} .ds-deadline p{margin:0;color:var(--brand-muted,#f0d9df);} .ds-deadline strong{color:var(--on-brand,#fffaf3);} .ds-deadline a{font:700 1rem/1.25 ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif;display:inline-flex;align-items:center;justify-content:center;min-height:48px;padding:12px 20px;border:1px solid transparent;border-radius:var(--radius-control,6px);cursor:pointer;text-decoration:none;background:var(--gold-button,#f0b323);color:var(--ink,#25191c);} .ds-deadline a:hover{background:var(--gold-button-hover,#ffd065);} .ds-deadline a:focus-visible{outline:2px solid var(--gold,#f0b323);outline-offset:3px;} .ds-deadline a:active{outline:2px solid currentColor;outline-offset:-4px;} @media(max-width:760px){.ds-match{grid-template-columns:minmax(0,1fr);} .ds-match-main{padding:24px;} .ds-match-main h2{font-size:2rem;} .ds-deadline{padding:20px 24px;}}"
+    },
+    {
+      "name": "Подпись клуба",
+      "kind": "custom",
+      "description": "Спокойная клубная подпись и источник архивного снимка внизу рабочего поля.",
+      "html": "<footer class=\"ds-club-footer\"><p lang=\"it\">Daje Roma</p><a href=\"https://www.asroma.com/en/news/55859/a-career-in-photos-16-of-the-best-de-rossi-shots\" target=\"_blank\" rel=\"noopener noreferrer\">Фото: архив AS Roma</a></footer>",
+      "css": ".ds-club-footer { display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px 24px; padding:20px 32px; border-top:1px solid var(--line); background:var(--paper); font-family:var(--font-body); } .ds-club-footer p { margin:0; font-weight:700; color:var(--roma); } .ds-club-footer a { display:inline-flex; align-items:center; min-height:44px; color:var(--muted); font-size:.8125rem; text-underline-offset:3px; } .ds-club-footer a:hover { text-decoration-thickness:2px; } .ds-club-footer a:focus-visible { outline:2px solid var(--roma); outline-offset:3px; }"
+    }
+  ],
+  "narrative": {
+    "northStar": "Roma Matchday",
+    "overview": "Roma Matchday — спокойный рабочий интерфейс соревнования болельщиков. Бордовый связывает навигацию и важные данные с AS Roma; золото выделяет действие в полосе дедлайна. Светлая тёплая поверхность поддерживает чтение форм и таблиц. Приглушённая архивная фотография команды связывает интерфейс с клубной памятью; её видно сверху и по краям рабочего поля.\n\nПлотность задают подписи, разделители и числовая иерархия. Спортивный характер выражается через матч, счёт и таблицу, а не через рекламную композицию. Факты, состояния и пользовательские данные приходят из приложения.",
+    "keyCharacteristics": [
+      "Бордовый каркас, архивная Рома на фоне и непрозрачное светлое рабочее поле.",
+      "Явные сроки, крупный счёт, табличные цифры.",
+      "Линейные списки и спокойные поверхности без теней.",
+      "Единые нативные элементы и мгновенная смена состояний."
+    ],
+    "rules": [
+      {
+        "name": "The Deadline Rule",
+        "body": "Срок и действие на открытый прогноз образуют одну визуальную группу.",
+        "section": "colors"
+      },
+      {
+        "name": "The Numeric Rule",
+        "body": "Счёт, очки, место и время используют табличные цифры; значимость задаёт размер и вес.",
+        "section": "typography"
+      },
+      {
+        "name": "The Flat Surface Rule",
+        "body": "Поверхности разделяются тоном и линиями; тени и анимация не задают иерархию.",
+        "section": "elevation"
+      },
+      {
+        "name": "The Working Paper Rule",
+        "body": "Фотография остаётся за непрозрачным рабочим полем; она не участвует в hit testing и скрыта от скринридера. При отсутствии изображения интерфейс сохраняет светлую поверхность. Режимы forced colors и печати убирают фото и верхний отступ; reduced transparency скрывает фото.",
+        "section": "elevation"
+      }
+    ],
+    "dos": [
+      "Do сохранять цветовую иерархию AS Roma и существующую эмблему.",
+      "Do группировать связанные подписи, значения и действия; связывать ошибки с полями.",
+      "Do сохранять семантику таблиц, русские подписи и московское время.",
+      "Do использовать реальные данные и честные пустые состояния."
+    ],
+    "donts": [
+      "Don't превращать рабочую поверхность в промостраницу с героем или фотомакетом.",
+      "Don't использовать цвет как единственный способ сообщить статус или ошибку.",
+      "Don't добавлять демонстрационные аккаунты, выдуманные отзывы, показатели или заявления о готовности.",
+      "Don't заменять нативные формы декоративными контролами без необходимости."
+    ]
+  }
+}

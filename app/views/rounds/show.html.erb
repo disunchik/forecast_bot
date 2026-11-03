@@ -1,17 +1,39 @@
-<h1>Матч №<%= @match.forecast_number %>: <%= match_title(@match) %></h1>
-<p class="muted"><%= @match.competition.name %> · <%= moscow_time(@match.kickoff_at) %></p>
-<div class="table-wrap"><table><thead><tr><th>Место</th><th>Участник</th><th>HT</th><th>FT</th><th>Голы</th><th>Ассисты</th><th>Баллы</th><th></th></tr></thead><tbody>
-<% @forecasts.each do |forecast| %>
-<tr>
-  <td><%= forecast.forecast_score&.placement || "—" %></td>
-  <td><strong><%= forecast.user.nickname %></strong></td>
-  <td><%= match_score(forecast.match, forecast.halftime_roma, forecast.halftime_opponent) %></td>
-  <td><%= match_score(forecast.match, forecast.fulltime_roma, forecast.fulltime_opponent) %></td>
-  <td><%= forecast.scorers.map(&:name).join(", ").presence || "—" %></td>
-  <td><%= forecast.forecast_assists.map { |a| a.no_assist? ? "Без ассиста" : a.player&.name }.compact.join(", ").presence || "—" %></td>
-  <td><strong><%= forecast.forecast_score&.total_points || "—" %></strong></td>
-  <td><%= link_to "Подробнее", match_forecast_path(@match, forecast) %></td>
-</tr>
-<% end %>
-<% if @forecasts.empty? %><tr><td colspan="8" class="empty">Прогнозов на этот матч пока нет.</td></tr><% end %>
-</tbody></table></div>
+<div class="page-heading">
+  <h1>Матч №<%= @match.forecast_number %>: <%= match_title(@match) %></h1>
+</div>
+<div class="fixture-meta">
+  <span><%= @match.competition.name %></span>
+  <span class="muted"><%= moscow_time(@match.kickoff_at) %></span>
+</div>
+<p id="round-scroll-hint" class="scroll-hint">Прокрутите таблицу вправо, чтобы увидеть все данные и подробности прогноза.</p>
+<div class="table-wrap round-table" tabindex="0" role="region" aria-describedby="round-scroll-hint" aria-label="Прогнозы участников с горизонтальной прокруткой">
+  <table aria-label="Прогнозы участников на матч">
+    <thead>
+      <tr>
+        <th scope="col" class="rank-cell" aria-label="Место">#</th>
+        <th scope="col">Участник</th>
+        <th scope="col" class="numeric"><abbr title="Первый тайм">HT</abbr></th>
+        <th scope="col" class="numeric"><abbr title="Итоговый счёт">FT</abbr></th>
+        <th scope="col">Голы</th>
+        <th scope="col">Ассисты</th>
+        <th scope="col" class="numeric points-cell">Баллы</th>
+        <th scope="col"><span class="visually-hidden">Подробности прогноза</span></th>
+      </tr>
+    </thead>
+    <tbody>
+      <% @forecasts.each do |forecast| %>
+        <tr class="<%= "current-user" if forecast.user_id == current_user&.id %>">
+          <td class="numeric rank-cell"><%= forecast.forecast_score&.placement || "—" %></td>
+          <th scope="row"><%= forecast.user.nickname %></th>
+          <td class="numeric"><%= match_score(forecast.match, forecast.halftime_roma, forecast.halftime_opponent) %></td>
+          <td class="numeric"><%= match_score(forecast.match, forecast.fulltime_roma, forecast.fulltime_opponent) %></td>
+          <td><%= forecast.scorers.map(&:name).join(", ").presence || "—" %></td>
+          <td><%= forecast.forecast_assists.map { |a| a.no_assist? ? "Без ассиста" : a.player&.name }.compact.join(", ").presence || "—" %></td>
+          <td class="numeric points-cell"><strong><%= forecast.forecast_score&.total_points || "—" %></strong></td>
+          <td><%= link_to "Подробнее", match_forecast_path(@match, forecast) %></td>
+        </tr>
+      <% end %>
+      <% if @forecasts.empty? %><tr><td colspan="8" class="empty">Прогнозов на этот матч пока нет.</td></tr><% end %>
+    </tbody>
+  </table>
+</div>
