@@ -4,6 +4,7 @@
     <title><%= content_for(:title) || "AS Roma сайт прогнозистов" %></title>
     <meta name="viewport" content="width=device-width,initial-scale=1">
     <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="description" content="Прогнозы на матчи AS Roma, результаты и таблица участников.">
     <meta name="application-name" content="AS Roma сайт прогнозистов">
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="theme-color" content="#7a1732">
@@ -25,12 +26,12 @@
           <span>AS Roma сайт прогнозистов</span>
         <% end %>
         <% if authenticated? %>
-          <nav class="main-nav">
-            <%= link_to "Главная", root_path %>
-            <%= link_to "Таблица", standings_path %>
-            <%= link_to "Туры", rounds_path %>
-            <%= link_to "Профиль", profile_path %>
-            <%= link_to "Админка", admin_root_path, class: "admin-link" if current_user&.admin? %>
+          <nav class="main-nav" aria-label="Основная навигация">
+            <%= link_to "Главная", root_path, aria: { current: controller_path == "home" ? "page" : nil } %>
+            <%= link_to "Таблица", standings_path, aria: { current: controller_path == "standings" ? "page" : nil } %>
+            <%= link_to "Туры", rounds_path, aria: { current: controller_path == "rounds" ? "page" : nil } %>
+            <%= link_to "Профиль", profile_path, aria: { current: controller_path == "profiles" ? "page" : nil } %>
+            <%= link_to "Админка", admin_root_path, class: "admin-link", aria: { current: controller_path.start_with?("admin/") ? "page" : nil } if current_user&.admin? %>
           </nav>
         <% end %>
       </div>

@@ -15,7 +15,7 @@
           <p><%= match.competition.name %> · Матч прогнозистов №<%= match.forecast_number %></p>
           <p class="muted">Начало: <%= moscow_time(match.kickoff_at) %><br>Приём до: <%= moscow_time(match.forecast_closes_at) %></p>
           <% if forecast %>
-            <div class="card" style="background:#fffaf3">
+            <div class="forecast-summary">
               <strong>Ваш прогноз</strong><br>
               HT: <%= match_score(forecast.match, forecast.halftime_roma, forecast.halftime_opponent) %> · FT: <%= match_score(forecast.match, forecast.fulltime_roma, forecast.fulltime_opponent) %><br>
               Первый гол: <%= first_score_label(forecast.first_score) %>
