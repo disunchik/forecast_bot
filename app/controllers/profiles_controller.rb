@@ -3,7 +3,12 @@ class ProfilesController < ApplicationController
     @user = current_user
     @transactions = active_season ? @user.gold_point_transactions.where(season: active_season).order(created_at: :desc).limit(100) : GoldPointTransaction.none
     @forecasts = active_season ? @user.forecasts.joins(:match).where(matches: { season_id: active_season.id }).includes(:match, :forecast_score).order("matches.forecast_number DESC") : Forecast.none
-    @achievements = Achievement.where(active: true).or(Achievement.where(id: @user.achievement_ids)).order(:name)
+    load_achievements
+  end
+
+  def achievements
+    @user = current_user
+    load_achievements
   end
 
   def edit
@@ -26,6 +31,11 @@ class ProfilesController < ApplicationController
   end
 
   private
+    def load_achievements
+      @obtained_achievement_ids = @user.achievement_ids
+      @achievements = Achievement.active.or(Achievement.where(id: @obtained_achievement_ids)).order(:name)
+    end
+
     def profile_params
       params.require(:user).permit(:email_address, :password, :password_confirmation, :notify_forecast_open, :notify_forecast_reminder, :notify_results, :notify_rewards)
     end

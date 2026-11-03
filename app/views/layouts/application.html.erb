@@ -1,10 +1,10 @@
 <!DOCTYPE html>
 <html lang="ru">
   <head>
-    <title><%= content_for(:title) || "AS Roma бот прогнозов" %></title>
+    <title><%= content_for(:title) || "AS Roma сайт прогнозистов" %></title>
     <meta name="viewport" content="width=device-width,initial-scale=1">
     <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="application-name" content="AS Roma бот прогнозов">
+    <meta name="application-name" content="AS Roma сайт прогнозистов">
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="theme-color" content="#7a1732">
     <meta name="turbo-cache-control" content="no-cache">
@@ -20,7 +20,10 @@
   <body>
     <header class="site-header">
       <div class="shell header-inner">
-        <%= link_to "AS Roma бот прогнозов", root_path, class: "brand" %>
+        <%= link_to root_path, class: "brand" do %>
+          <%= image_tag "roma-crest.png", alt: "Эмблема AS Roma", width: 42, height: 55, class: "brand-crest" %>
+          <span>AS Roma сайт прогнозистов</span>
+        <% end %>
         <% if authenticated? %>
           <nav class="main-nav">
             <%= link_to "Главная", root_path %>

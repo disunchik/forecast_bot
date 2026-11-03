@@ -1,5 +1,6 @@
 <h1>Туры текущего сезона</h1>
 <div class="cards">
+  <% if @matches.empty? %><div class="card empty">Матчи текущего сезона пока не добавлены.</div><% end %>
   <% @matches.each do |match| %>
     <div class="card">
       <div><span class="badge">№<%= match.forecast_number %></span> <span class="badge"><%= match.competition.name %></span></div>

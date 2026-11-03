@@ -4,6 +4,7 @@
   <%= link_to "Добавить турнир", new_admin_competition_path, class: "button" %>
 </div>
 <div class="cards">
+  <% if @competitions.empty? %><div class="card empty">Турниры пока не добавлены.</div><% end %>
   <% @competitions.each do |competition| %>
     <div class="card"><strong><%= competition.name %></strong> · <%= competition.active? ? "Активный" : "В архиве" %>
       <%= link_to "Редактировать", edit_admin_competition_path(competition) %>

@@ -1,0 +1,21 @@
+<div class="actions profile-heading">
+  <h1>Ачивки <span class="muted"><%= @obtained_achievement_ids.size %>/<%= @achievements.size %></span></h1>
+  <%= link_to "Вернуться в профиль", profile_path, class: "button button-secondary" %>
+</div>
+<div class="cards">
+  <% @achievements.each do |achievement| %>
+    <% obtained = @obtained_achievement_ids.include?(achievement.id) %>
+    <article class="card">
+      <div class="actions achievement-heading">
+        <strong><%= achievement.name %></strong>
+        <% if obtained %><span class="badge badge-gold">Получена</span><% elsif achievement.secret? && !achievement.revealed? %><span class="badge">Секретная</span><% end %>
+      </div>
+      <% if achievement.secret? && !achievement.revealed? %>
+        <p class="muted">Условие пока скрыто.</p>
+      <% else %>
+        <p class="muted"><%= achievement.description.presence || "Условие не указано" %></p>
+      <% end %>
+    </article>
+  <% end %>
+  <% if @achievements.empty? %><div class="card empty">Список ачивок появится здесь.</div><% end %>
+</div>

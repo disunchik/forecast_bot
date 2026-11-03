@@ -1,6 +1,7 @@
 <%= render "admin/nav" %><h1>Результаты</h1>
 <%= render "admin/season_picker", url: admin_results_path %>
 <div class="cards">
+  <% if @matches.empty? %><div class="card empty">Матчи сезона пока не добавлены.</div><% end %>
   <% @matches.each do |match| %>
     <div class="card"><strong>№<%= match.forecast_number %> · <%= match_title(match) %></strong>
       <p><%= result_state_label(match.match_result) %> · <%= moscow_time(match.kickoff_at) %></p>

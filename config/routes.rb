@@ -2,7 +2,9 @@ Rails.application.routes.draw do
   resource :session, only: %i[new create destroy]
   resources :registrations, only: %i[new create]
   resource :legacy_setup, only: %i[edit update]
-  resource :profile, only: %i[show edit update]
+  resource :profile, only: %i[show edit update] do
+    get :achievements
+  end
   resources :passwords, param: :token, only: %i[new create edit update]
 
   resources :matches, only: [] do

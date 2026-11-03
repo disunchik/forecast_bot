@@ -2,7 +2,7 @@
 <%= form_with model: [match, forecast], data: { controller: "first-score" } do |form| %>
   <section class="card card-accent">
     <h2>1. Золотые баллы</h2>
-    <p>Баланс: <strong><%= current_user.gold_points_balance(match.season) %> ЗБ</strong> · Доступно для этой ставки: <strong><%= @available_gold %> ЗБ</strong></p>
+    <p>Доступно для этой ставки: <strong><%= @available_gold %> ЗБ</strong></p>
     <% gold_percentage = match.match_result&.scoring_snapshot&.fetch("gold_percentage", nil) || ScoringRule.value_for("gold_percentage", 50) %>
     <p class="muted">Засчитается максимум <%= gold_percentage %>% от обычных баллов за прогноз. Вся поставленная сумма будет списана после подтверждения результата.</p>
     <div class="field" style="max-width:220px"><%= form.label :gold_points_stake, "Поставить ЗБ" %><%= form.number_field :gold_points_stake, min: 0, max: @available_gold, required: true %></div>

@@ -1,45 +1,37 @@
-<div class="actions" style="justify-content:space-between">
+<div class="actions profile-heading">
   <h1>Профиль</h1>
   <%= link_to "Настройки", edit_profile_path, class: "button button-secondary" %>
 </div>
-<div class="grid-3">
-  <div class="card"><div class="muted">Никнейм</div><div class="stat" style="font-size:1.35rem"><%= @user.nickname %></div></div>
-  <div class="card"><div class="muted">Баланс ЗБ</div><div class="stat"><%= @user.gold_points_balance(active_season) %></div></div>
+<div class="profile-stats">
+  <div class="card"><div class="muted">Никнейм</div><div class="stat profile-nickname"><%= @user.nickname %></div></div>
   <div class="card"><div class="muted">Доступно ЗБ</div><div class="stat"><%= @user.available_gold_points(active_season) %></div></div>
-</div>
-
-<h2>Ачивки</h2>
-<div class="cards">
-  <% @achievements.each do |achievement| %>
-    <% obtained = @user.achievement_ids.include?(achievement.id) %>
-    <div class="card">
-      <div class="actions" style="margin-top:0;justify-content:space-between">
-        <strong><%= achievement.name %></strong>
-        <% if obtained %><span class="badge badge-gold">Получена</span><% elsif achievement.secret? && !achievement.revealed? %><span class="badge">Секретная</span><% end %>
-      </div>
-      <% if achievement.secret? && !achievement.revealed? %>
-        <span class="muted">Условие пока скрыто.</span>
-      <% else %>
-        <span class="muted"><%= achievement.description.presence || "Условие не указано" %></span>
-      <% end %>
-    </div>
+  <%= link_to achievements_profile_path, class: "card profile-achievements" do %>
+    <span class="muted">Ачивки</span>
+    <span class="stat"><%= @obtained_achievement_ids.size %>/<%= @achievements.size %></span>
   <% end %>
-  <% if @achievements.empty? %><div class="card empty">Ачивки пока не созданы.</div><% end %>
 </div>
 
-<h2>История ЗБ</h2>
-<div class="table-wrap"><table><thead><tr><th>Дата</th><th>Изменение</th><th>Причина</th></tr></thead><tbody>
-<% @transactions.each do |tx| %><tr><td><%= moscow_time(tx.created_at) %></td><td><strong><%= tx.amount.positive? ? "+#{tx.amount}" : tx.amount %></strong></td><td><%= tx.note %></td></tr><% end %>
-<% if @transactions.empty? %><tr><td colspan="3" class="empty">Операций пока нет.</td></tr><% end %>
-</tbody></table></div>
+<section class="card profile-section" aria-labelledby="my-forecasts-heading">
+  <h2 id="my-forecasts-heading">Мои прогнозы</h2>
+  <% if @forecasts.empty? %><p class="empty">У вас пока нет прогнозов в текущем сезоне.</p><% end %>
+  <% @forecasts.each do |forecast| %>
+    <article class="profile-forecast">
+      <strong>№<%= forecast.match.forecast_number %> · <%= match_title(forecast.match) %></strong>
+      <p>Первый тайм: <%= match_score(forecast.match, forecast.halftime_roma, forecast.halftime_opponent) %> · Итог: <%= match_score(forecast.match, forecast.fulltime_roma, forecast.fulltime_opponent) %></p>
+      <% if forecast.forecast_score %><span class="badge badge-gold"><%= forecast.forecast_score.total_points %> баллов</span><% end %>
+      <div class="actions"><%= link_to "Посмотреть прогноз", match_forecast_path(forecast.match, forecast), class: "button button-small" %></div>
+    </article>
+  <% end %>
+</section>
 
-<h2>Мои прогнозы</h2>
-<div class="cards">
-<% @forecasts.each do |forecast| %>
-  <div class="card"><strong>№<%= forecast.match.forecast_number %> · <%= match_title(forecast.match) %></strong><br>HT <%= match_score(forecast.match, forecast.halftime_roma, forecast.halftime_opponent) %> · FT <%= match_score(forecast.match, forecast.fulltime_roma, forecast.fulltime_opponent) %>
-  <% if forecast.forecast_score %><br><span class="badge badge-gold"><%= forecast.forecast_score.total_points %> баллов</span><% end %>
-  <div class="actions"><%= link_to "Посмотреть прогноз", match_forecast_path(forecast.match, forecast), class: "button button-small" %></div>
-  </div>
-<% end %>
-</div>
+<section class="card profile-section" aria-labelledby="gold-history-heading">
+  <h2 id="gold-history-heading">История ЗБ</h2>
+  <% if @transactions.empty? %>
+    <p class="empty">Операций пока нет.</p>
+  <% else %>
+    <div class="table-wrap"><table><thead><tr><th>Дата</th><th>Изменение</th><th>Причина</th></tr></thead><tbody>
+      <% @transactions.each do |tx| %><tr><td><%= moscow_time(tx.created_at) %></td><td><strong><%= tx.amount.positive? ? "+#{tx.amount}" : tx.amount %></strong></td><td><%= tx.note %></td></tr><% end %>
+    </tbody></table></div>
+  <% end %>
+</section>
 <div class="actions"><%= button_to "Выйти", session_path, method: :delete, form: { data: { turbo: false } }, class: "button button-secondary" %></div>

@@ -6,4 +6,4 @@
   <div class="card"><div class="muted">Активных игроков</div><div class="stat"><%= @players_count %></div></div>
 </div>
 <h2>Матчи</h2>
-<div class="cards"><% @upcoming_matches.each do |match| %><div class="card"><strong>№<%= match.forecast_number %> · <%= match_title(match) %></strong><br><span class="muted"><%= moscow_time(match.kickoff_at) %></span><div class="actions"><%= link_to "Открыть", admin_match_path(match), class: "button button-small" %></div></div><% end %></div>
+<div class="cards"><% if @upcoming_matches.empty? %><div class="card empty">Предстоящих матчей пока нет.</div><% end %><% @upcoming_matches.each do |match| %><div class="card"><strong>№<%= match.forecast_number %> · <%= match_title(match) %></strong><br><span class="muted"><%= moscow_time(match.kickoff_at) %></span><div class="actions"><%= link_to "Открыть", admin_match_path(match), class: "button button-small" %></div></div><% end %></div>

@@ -13,7 +13,7 @@
     <% entries = @snapshot.entries.public_send(group).order(:rank) %>
     <%= render "standings/standing_table", title: title, entries: entries if entries.exists? %>
   <% end %>
-<% else %><p>Подтверждённых результатов пока нет.</p><% end %>
+<% else %><div class="card empty">Подтверждённых результатов пока нет.</div><% end %>
 <% if @season && @snapshots.any? %>
   <details class="card">
     <summary><strong>Восстановление таблиц</strong></summary>

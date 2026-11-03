@@ -13,4 +13,5 @@
   <td><%= link_to "Подробнее", match_forecast_path(@match, forecast) %></td>
 </tr>
 <% end %>
+<% if @forecasts.empty? %><tr><td colspan="8" class="empty">Прогнозов на этот матч пока нет.</td></tr><% end %>
 </tbody></table></div>

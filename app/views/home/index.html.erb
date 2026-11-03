@@ -2,7 +2,7 @@
 <% unless active_season %>
   <div class="alert alert-error">Активный сезон ещё не создан.</div>
 <% else %>
-  <p class="muted">Сезон <strong><%= active_season.name %></strong> · Баланс: <strong><%= current_user.gold_points_balance(active_season) %> ЗБ</strong> · Доступно: <strong><%= current_user.available_gold_points(active_season) %> ЗБ</strong></p>
+  <p class="muted">Сезон <strong><%= active_season.name %></strong> · Доступно: <strong><%= current_user.available_gold_points(active_season) %> ЗБ</strong></p>
 
   <% if @open_matches.any? %>
     <h2>Открытые прогнозы</h2>

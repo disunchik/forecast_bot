@@ -165,6 +165,9 @@ class ApplicationWorkflowsTest < ActionDispatch::IntegrationTest
     sign_in_as(@user)
     get profile_path
     assert_response :success
+    assert_select "a[href=?]", achievements_profile_path, text: /1\/2/
+    get achievements_profile_path
+    assert_response :success
     assert_match "Permanent", response.body
     assert_match "Mystery", response.body
     assert_no_match "PRIVATE CONDITION", response.body
@@ -263,5 +266,52 @@ class ApplicationWorkflowsTest < ActionDispatch::IntegrationTest
     get round_path(@match), as: :json
     assert_response :not_acceptable
     assert_no_match(/gold_points_stake|gold_points_balance|password_digest/, response.body)
+  end
+
+  test "participants see only available gold and edit can reuse its own stake" do
+    fund(amount: 10)
+    forecast = make_forecast(gold_points_stake: 3)
+    second = make_match
+    sign_in_as(@user)
+    get profile_path
+    assert_select ".profile-stats > .card", count: 3
+    assert_select ".profile-stats .card", text: /Доступно ЗБ\s*7/
+    assert_select ".profile-stats a", text: /Ачивки\s*0\/0/
+    assert_no_match "Баланс", response.body
+    get root_path
+    assert_match "Доступно:", response.body
+    assert_no_match "Баланс:", response.body
+    get new_match_forecast_path(second)
+    assert_select "input[name='forecast[gold_points_stake]'][max='7']"
+    assert_no_match "Баланс:", response.body
+    get edit_match_forecast_path(@match, forecast)
+    assert_select "input[name='forecast[gold_points_stake]'][max='10']"
+    assert_equal 10, @user.gold_points_balance(@season)
+    assert_equal 3, @user.reserved_gold_points(@season)
+  end
+
+  test "empty forecasts history and rounds have visible containers" do
+    @match.destroy!
+    sign_in_as(@user)
+    get profile_path
+    assert_select "section.profile-section", count: 2
+    assert_select "#my-forecasts-heading", text: "Мои прогнозы"
+    assert_select ".profile-section .empty", text: "У вас пока нет прогнозов в текущем сезоне."
+    assert_select ".profile-section .empty", text: "Операций пока нет."
+    assert_no_match "Ачивки пока не созданы", response.body
+    get rounds_path
+    assert_select ".card.empty", text: "Матчи текущего сезона пока не добавлены."
+  end
+
+  test "achievement catalogue excludes unearned archives and requires login" do
+    Achievement.create!(name: "Old hidden", active: false, description: "ARCHIVED PRIVATE")
+    sign_in_as(@user)
+    get achievements_profile_path
+    assert_response :success
+    assert_no_match "ARCHIVED PRIVATE", response.body
+    assert_select "h1", text: /0\/0/
+    delete session_path
+    get achievements_profile_path
+    assert_redirected_to new_session_path
   end
 end

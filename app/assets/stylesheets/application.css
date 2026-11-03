@@ -82,3 +82,37 @@ tr:last-child td { border-bottom: 0; }
   .details-list { grid-template-columns: 1fr; gap: 2px; }
   .details-list dd { margin-bottom: 9px; }
 }
+
+.brand { display: flex; align-items: center; gap: 12px; min-width: 0; }
+.brand-crest { width: 42px; height: 55px; object-fit: contain; flex-shrink: 0; }
+.brand span { max-width: 260px; }
+.admin-menu { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 12px; max-width: 1080px; margin: 0 auto 28px; }
+.admin-menu a { display: flex; align-items: center; justify-content: center; min-height: 54px; padding: 12px 8px; font-size: 1rem; text-align: center; }
+.admin-menu a[aria-current="page"] { background: var(--roma); border-color: var(--roma); color: white; }
+.profile-heading { margin: 0 0 24px; justify-content: space-between; }
+.profile-heading h1 { margin-bottom: 0; }
+.profile-stats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
+.profile-stats .card { display: flex; flex-direction: column; justify-content: center; min-height: 128px; }
+.profile-nickname { font-size: 1.35rem; overflow-wrap: anywhere; }
+.profile-achievements:hover { border-color: var(--roma); text-decoration: none; }
+.profile-achievements:focus-visible { outline: 3px solid var(--gold); outline-offset: 3px; }
+.profile-section { margin-top: 24px; }
+.profile-section .table-wrap { border: 0; }
+.profile-forecast { padding: 18px 0; border-bottom: 1px solid var(--line); }
+.profile-forecast:last-child { padding-bottom: 0; border-bottom: 0; }
+.profile-section .empty { margin: 0; }
+.achievement-heading { margin-top: 0; justify-content: space-between; }
+
+@media (max-width: 899px) {
+  .admin-menu { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+}
+@media (max-width: 760px) {
+  .brand span { max-width: none; }
+  .profile-stats { grid-template-columns: 1fr; gap: 12px; }
+  .profile-stats .card { padding: 16px; min-height: 112px; }
+  .admin-menu { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+  .admin-menu a { font-size: .9rem; min-height: 50px; padding: 10px 4px; }
+}
+@media (max-width: 360px) {
+  .admin-menu { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
