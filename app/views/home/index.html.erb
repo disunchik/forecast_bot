@@ -20,9 +20,9 @@
               HT: <%= match_score(forecast.match, forecast.halftime_roma, forecast.halftime_opponent) %> · FT: <%= match_score(forecast.match, forecast.fulltime_roma, forecast.fulltime_opponent) %><br>
               Первый гол: <%= first_score_label(forecast.first_score) %>
             </div>
-            <div class="actions"><%= link_to "Изменить прогноз", edit_match_forecast_path(match, forecast), class: "button", data: { turbo: false } %></div>
+            <div class="actions"><%= link_to "Изменить прогноз", edit_match_forecast_path(match, forecast), class: "button" %></div>
           <% else %>
-            <div class="actions"><%= link_to "Сделать прогноз", new_match_forecast_path(match), class: "button", data: { turbo: false } %></div>
+            <div class="actions"><%= link_to "Сделать прогноз", new_match_forecast_path(match), class: "button" %></div>
           <% end %>
         </article>
       <% end %>

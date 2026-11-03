@@ -12,12 +12,26 @@ class PredictionWorkflowTest < ApplicationSystemTestCase
     click_button "Войти"
     assert_current_path root_path
     assert_selector "nav", text: "Главная"
+    wait_for_page_render
+  end
+
+  def wait_for_page_render
+    page.evaluate_async_script(<<~JS)
+      const done = arguments[0]
+      const settled = () => document.fonts.ready.then(() => {
+        requestAnimationFrame(() => requestAnimationFrame(() => done()))
+      })
+      if (document.readyState === "complete") settled()
+      else window.addEventListener("load", settled, { once: true })
+    JS
   end
 
   test "mobile user submits edits and views full saved forecast" do
     page.current_window.resize_to(390, 844)
     login(@user)
     click_link "Сделать прогноз"
+    assert_current_path new_match_forecast_path(@match)
+    wait_for_page_render
     fill_in "forecast_halftime_roma", with: 0
     fill_in "forecast_halftime_opponent", with: 0
     fill_in "forecast_fulltime_roma", with: 0
@@ -27,6 +41,7 @@ class PredictionWorkflowTest < ApplicationSystemTestCase
     assert_text "Прогноз сохранён"
     assert_no_link "Сделать прогноз"
     click_link "Изменить прогноз"
+    wait_for_page_render
     fill_in "forecast_fulltime_roma", with: 1
     choose "Рома", exact: true
     click_button "Сохранить изменения"
@@ -81,6 +96,8 @@ class PredictionWorkflowTest < ApplicationSystemTestCase
     @match.update!(venue: :away)
     login(@user)
     click_link "Сделать прогноз"
+    assert_current_path new_match_forecast_path(@match)
+    wait_for_page_render
     fill_in "forecast_halftime_roma", with: 0
     fill_in "forecast_halftime_opponent", with: 0
     fill_in "forecast_fulltime_opponent", with: 0
