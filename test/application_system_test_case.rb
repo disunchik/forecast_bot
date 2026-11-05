@@ -7,81 +7,13 @@ class ApplicationSystemTestCase < ActionDispatch::SystemTestCase
   Capybara.default_max_wait_time = 5
 
   setup { page.current_window.resize_to(1280, 900) }
-
-  def click_navigation_link(label, destination, **options)
-    link = find_link(label, **options)
-    prepare_element_for_interaction(link)
-    link.click(x: 0, y: 0)
-    assert_current_path destination
-  rescue Minitest::Assertion
-    warn "NAVIGATION_DIAGNOSTICS #{page.evaluate_script('JSON.stringify({url:location.href,events:window.__navigationDiagnostics})')}"
-    raise
-  end
-
-  def fill_score(locator, value)
-    field = find_field(locator)
-    prepare_element_for_interaction(field)
-    browser = page.driver.browser
-    modifier = browser.capabilities.platform_name.to_s.downcase.include?("mac") ? :command : :control
-    browser.action.click(field.native).key_down(modifier).send_keys("a").key_up(modifier)
-      .send_keys(:backspace).send_keys(value.to_s).perform
-    assert_field locator, with: value.to_s
-  end
-
-  def prepare_element_for_interaction(element)
-    page.scroll_to(element, align: :center)
-    ready = page.evaluate_async_script(<<~JS, element, Capybara.default_max_wait_time * 1000 - 100)
-      const element = arguments[0], timeout = arguments[1], done = arguments[arguments.length - 1]
-      if (!window.__navigationDiagnostics) {
-        const events = window.__navigationDiagnostics = []
-        const log = (type, detail = {}) => events.push({type, time: performance.now(), ...detail})
-        for (const type of ["pointerdown", "pointerup", "click", "turbo:click", "turbo:before-visit", "turbo:before-fetch-request", "turbo:before-render", "turbo:load"]) {
-          document.addEventListener(type, event => {
-            const link = event.target.closest?.("a")
-            const item = {target: event.target.tagName, href: link?.getAttribute("href"), x: event.clientX, y: event.clientY, url: String(event.detail?.url || "")}
-            log(type, item)
-            setTimeout(() => item.prevented = event.defaultPrevented, 0)
-          }, true)
-        }
-        window.addEventListener("error", event => log("error", {message: event.message}))
-        window.addEventListener("unhandledrejection", event => log("rejection", {message: String(event.reason)}))
-        const nativeFetch = window.fetch
-        window.fetch = function(...args) {
-          const url = String(args[0]?.url || args[0])
-          log("fetch", {url})
-          args[1]?.signal?.addEventListener("abort", () => log("abort", {url}))
-          return nativeFetch.apply(this, args).then(response => { log("response", {url, status: response.status}); return response }, error => { log("fetch-error", {url, message: String(error)}); throw error })
-        }
-      }
-      let previous, stable = 0, finished = false
-      const finish = ready => {
-        if (finished) return
-        finished = true
-        clearTimeout(timer)
-        done(ready)
-      }
-      const timer = setTimeout(() => finish(false), timeout)
-      const check = () => {
-        if (finished) return
-        if (!element.isConnected) return finish(false)
-        const rect = element.getBoundingClientRect()
-        const hit = document.elementFromPoint(rect.x + rect.width / 2, rect.y + rect.height / 2)
-        const receivesPointer = hit === element || element.contains(hit)
-        const position = [rect.x, rect.y, rect.width, rect.height].join(",")
-        stable = position === previous && receivesPointer ? stable + 1 : 0
-        previous = position
-        if (stable >= 2) finish(true)
-        else requestAnimationFrame(check)
-      }
-      requestAnimationFrame(check)
-    JS
-    assert ready, "Element did not become stable and unobstructed before interaction"
-  end
-
+  # Fixture passwords can trigger a native Chrome leak warning that captures
+  # clicks outside the DOM. This preference only affects the isolated test profile.
   if ENV["SELENIUM_REMOTE_URL"]
     Capybara.register_driver :remote_chrome do |app|
       options = Selenium::WebDriver::Chrome::Options.new
       options.binary = ENV["BROWSER_BINARY"] if ENV["BROWSER_BINARY"]
+      options.add_preference("profile.password_manager_leak_detection", false)
       options.add_argument("--headless=new")
       options.add_argument("--no-sandbox")
       options.add_argument("--disable-dev-shm-usage")
@@ -92,6 +24,8 @@ class ApplicationSystemTestCase < ActionDispatch::SystemTestCase
     Capybara.app_host = ENV.fetch("CAPYBARA_APP_HOST")
     driven_by :remote_chrome
   else
-    driven_by :selenium, using: :headless_chrome, screen_size: [ 1280, 900 ]
+    driven_by :selenium, using: :headless_chrome, screen_size: [ 1280, 900 ] do |options|
+      options.add_preference("profile.password_manager_leak_detection", false)
+    end
   end
 end
