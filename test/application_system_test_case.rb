@@ -7,10 +7,13 @@ class ApplicationSystemTestCase < ActionDispatch::SystemTestCase
   Capybara.default_max_wait_time = 5
 
   setup { page.current_window.resize_to(1280, 900) }
+  # Fixture passwords can trigger a native Chrome leak warning that captures
+  # clicks outside the DOM. This preference only affects the isolated test profile.
   if ENV["SELENIUM_REMOTE_URL"]
     Capybara.register_driver :remote_chrome do |app|
       options = Selenium::WebDriver::Chrome::Options.new
       options.binary = ENV["BROWSER_BINARY"] if ENV["BROWSER_BINARY"]
+      options.add_preference("profile.password_manager_leak_detection", false)
       options.add_argument("--headless=new")
       options.add_argument("--no-sandbox")
       options.add_argument("--disable-dev-shm-usage")
@@ -21,6 +24,8 @@ class ApplicationSystemTestCase < ActionDispatch::SystemTestCase
     Capybara.app_host = ENV.fetch("CAPYBARA_APP_HOST")
     driven_by :remote_chrome
   else
-    driven_by :selenium, using: :headless_chrome, screen_size: [ 1280, 900 ]
+    driven_by :selenium, using: :headless_chrome, screen_size: [ 1280, 900 ] do |options|
+      options.add_preference("profile.password_manager_leak_detection", false)
+    end
   end
 end

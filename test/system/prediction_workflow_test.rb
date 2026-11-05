@@ -85,6 +85,25 @@ class PredictionWorkflowTest < ApplicationSystemTestCase
     assert_text "ЗБ применено"
   end
 
+  test "forecast and profile links survive repeated mobile and desktop navigation" do
+    login(@user)
+    [ [ 390, 844 ], [ 1280, 900 ] ].each do |width, height|
+      page.current_window.resize_to(width, height)
+      3.times do
+        click_link "Сделать прогноз"
+        assert_current_path new_match_forecast_path(@match)
+        assert_selector "form.forecast-form"
+        click_link "Отмена"
+        assert_current_path root_path
+        click_link "Профиль", exact: true
+        assert_current_path profile_path
+        assert_text "У вас пока нет прогнозов"
+        click_link "Главная", exact: true
+        assert_current_path root_path
+      end
+    end
+  end
+
   test "PWA manifest and service worker register without offline predictions" do
     login(@user)
     assert_selector "link[rel=manifest]", visible: :all
