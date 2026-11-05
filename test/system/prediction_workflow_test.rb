@@ -29,25 +29,24 @@ class PredictionWorkflowTest < ApplicationSystemTestCase
   test "mobile user submits edits and views full saved forecast" do
     page.current_window.resize_to(390, 844)
     login(@user)
-    click_link "Сделать прогноз"
-    assert_current_path new_match_forecast_path(@match)
+    click_navigation_link "Сделать прогноз", new_match_forecast_path(@match)
     wait_for_page_render
-    fill_in "forecast_halftime_roma", with: 0
-    fill_in "forecast_halftime_opponent", with: 0
-    fill_in "forecast_fulltime_roma", with: 0
-    fill_in "forecast_fulltime_opponent", with: 0
+    fill_score "forecast_halftime_roma", 0
+    fill_score "forecast_halftime_opponent", 0
+    fill_score "forecast_fulltime_roma", 0
+    fill_score "forecast_fulltime_opponent", 0
     choose "Голов не будет"
     click_button "Отправить прогноз"
     assert_text "Прогноз сохранён"
     assert_no_link "Сделать прогноз"
-    click_link "Изменить прогноз"
+    click_navigation_link "Изменить прогноз", edit_match_forecast_path(@match, @user.forecasts.find_by!(match: @match))
     wait_for_page_render
-    fill_in "forecast_fulltime_roma", with: 1
+    fill_score "forecast_fulltime_roma", 1
     choose "Рома", exact: true
     click_button "Сохранить изменения"
     assert_text "Прогноз обновлён"
-    click_link "Профиль", exact: true
-    click_link "Посмотреть прогноз"
+    click_navigation_link "Профиль", profile_path, exact: true
+    click_navigation_link "Посмотреть прогноз", match_forecast_path(@match, @user.forecasts.find_by!(match: @match))
     assert_text "Итог"
     assert_text "1:0"
     assert page.evaluate_script("document.documentElement.scrollWidth <= window.innerWidth")
@@ -59,7 +58,7 @@ class PredictionWorkflowTest < ApplicationSystemTestCase
     player = Player.create!(name: "Дибала")
     login(@admin)
     visit edit_admin_match_result_path(@match)
-    fill_in "match_result_fulltime_roma", with: 1
+    fill_score "match_result_fulltime_roma", 1
     choose "Рома", exact: true
     click_button "+ Добавить гол Ромы"
     within ".goal-row" do
@@ -76,13 +75,26 @@ class PredictionWorkflowTest < ApplicationSystemTestCase
     click_button "Выйти"
     assert_current_path new_session_path
     login(@user)
-    click_link "Профиль", exact: true
-    assert_current_path profile_path
-    click_link "Посмотреть прогноз"
-    assert_current_path match_forecast_path(@match, @user.forecasts.find_by!(match: @match))
+    click_navigation_link "Профиль", profile_path, exact: true
+    click_navigation_link "Посмотреть прогноз", match_forecast_path(@match, @user.forecasts.find_by!(match: @match))
     assert_text "Расчёт"
     assert_text "Место: 1"
     assert_text "ЗБ применено"
+  end
+
+  test "forecast and profile links survive repeated mobile and desktop navigation" do
+    login(@user)
+    [ [ 390, 844 ], [ 1280, 900 ] ].each do |width, height|
+      page.current_window.resize_to(width, height)
+      3.times do
+        click_navigation_link "Сделать прогноз", new_match_forecast_path(@match)
+        assert_selector "form.forecast-form"
+        click_navigation_link "Отмена", root_path
+        click_navigation_link "Профиль", profile_path, exact: true
+        assert_text "У вас пока нет прогнозов"
+        click_navigation_link "Главная", root_path, exact: true
+      end
+    end
   end
 
   test "PWA manifest and service worker register without offline predictions" do
@@ -95,25 +107,23 @@ class PredictionWorkflowTest < ApplicationSystemTestCase
   test "away prediction shows opponent first and automatic goal follows the named team" do
     @match.update!(venue: :away)
     login(@user)
-    click_link "Сделать прогноз"
-    assert_current_path new_match_forecast_path(@match)
+    click_navigation_link "Сделать прогноз", new_match_forecast_path(@match)
     wait_for_page_render
-    fill_in "forecast_halftime_roma", with: 0
-    fill_in "forecast_halftime_opponent", with: 0
-    fill_in "forecast_fulltime_opponent", with: 0
-    fill_in "forecast_fulltime_roma", with: 1
+    fill_score "forecast_halftime_roma", 0
+    fill_score "forecast_halftime_opponent", 0
+    fill_score "forecast_fulltime_opponent", 0
+    fill_score "forecast_fulltime_roma", 1
     assert_checked_field "forecast_first_score_roma"
     assert_field "forecast_first_score_opponent", disabled: true
-    fill_in "forecast_fulltime_opponent", with: 1
+    fill_score "forecast_fulltime_opponent", 1
     assert_unchecked_field "forecast_first_score_roma"
     choose "forecast_first_score_opponent"
-    fill_in "forecast_fulltime_opponent", with: 0
+    fill_score "forecast_fulltime_opponent", 0
     assert_checked_field "forecast_first_score_roma"
     click_button "Отправить прогноз"
     assert_text "Прогноз сохранён"
-    click_link "Профиль", exact: true
-    assert_current_path profile_path
-    click_link "Посмотреть прогноз"
+    click_navigation_link "Профиль", profile_path, exact: true
+    click_navigation_link "Посмотреть прогноз", match_forecast_path(@match, @user.forecasts.find_by!(match: @match))
     assert_text "Inter — Рома"
     assert_text "0:1"
     assert_equal "roma", @user.forecasts.find_by!(match: @match).first_score
