@@ -13,6 +13,9 @@ class ApplicationSystemTestCase < ActionDispatch::SystemTestCase
     prepare_element_for_interaction(link)
     link.click(x: 0, y: 0)
     assert_current_path destination
+  rescue Minitest::Assertion
+    warn "NAVIGATION_DIAGNOSTICS #{page.evaluate_script('JSON.stringify({url:location.href,events:window.__navigationDiagnostics})')}"
+    raise
   end
 
   def fill_score(locator, value)
@@ -29,6 +32,27 @@ class ApplicationSystemTestCase < ActionDispatch::SystemTestCase
     page.scroll_to(element, align: :center)
     ready = page.evaluate_async_script(<<~JS, element, Capybara.default_max_wait_time * 1000 - 100)
       const element = arguments[0], timeout = arguments[1], done = arguments[arguments.length - 1]
+      if (!window.__navigationDiagnostics) {
+        const events = window.__navigationDiagnostics = []
+        const log = (type, detail = {}) => events.push({type, time: performance.now(), ...detail})
+        for (const type of ["pointerdown", "pointerup", "click", "turbo:click", "turbo:before-visit", "turbo:before-fetch-request", "turbo:before-render", "turbo:load"]) {
+          document.addEventListener(type, event => {
+            const link = event.target.closest?.("a")
+            const item = {target: event.target.tagName, href: link?.getAttribute("href"), x: event.clientX, y: event.clientY, url: String(event.detail?.url || "")}
+            log(type, item)
+            setTimeout(() => item.prevented = event.defaultPrevented, 0)
+          }, true)
+        }
+        window.addEventListener("error", event => log("error", {message: event.message}))
+        window.addEventListener("unhandledrejection", event => log("rejection", {message: String(event.reason)}))
+        const nativeFetch = window.fetch
+        window.fetch = function(...args) {
+          const url = String(args[0]?.url || args[0])
+          log("fetch", {url})
+          args[1]?.signal?.addEventListener("abort", () => log("abort", {url}))
+          return nativeFetch.apply(this, args).then(response => { log("response", {url, status: response.status}); return response }, error => { log("fetch-error", {url, message: String(error)}); throw error })
+        }
+      }
       let previous, stable = 0, finished = false
       const finish = ready => {
         if (finished) return
