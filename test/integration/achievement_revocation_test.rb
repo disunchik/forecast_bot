@@ -25,7 +25,8 @@ class AchievementRevocationTest < ActionDispatch::IntegrationTest
     get admin_user_path(@user)
     assert_select "#user_achievement_#{@award.id} a[href=?]", revocation_admin_achievement_award_path(@achievement, @award)
     get admin_achievements_path
-    assert_select "a[href=?]", admin_achievement_path(@achievement, anchor: "recipients-heading"), text: /Получили: 1/
+    assert_select "#achievement_#{@achievement.id} .achievement-meta", text: /Получили: 1/
+    assert_select "#achievement_#{@achievement.id} .achievement-meta a", count: 0
     patch admin_achievement_path(@achievement), params: { achievement: { name: "" } }
     assert_response :unprocessable_entity
     assert_select "#user_achievement_#{@award.id}"
@@ -46,7 +47,8 @@ class AchievementRevocationTest < ActionDispatch::IntegrationTest
     assert_select "#achievement_#{@achievement.id} form", count: 0
     assert_select "a[href=?]", restoration_admin_achievement_award_path(@achievement, @award), text: "Восстановить"
     get admin_achievements_path
-    assert_select "a[href=?]", admin_achievement_path(@achievement, anchor: "recipients-heading"), text: /Получили: 0/
+    assert_select "#achievement_#{@achievement.id} .achievement-meta", text: /Получили: 0/
+    assert_select "#achievement_#{@achievement.id} .achievement-meta a", count: 0
     sign_in_as(@user)
     get achievements_profile_path
     assert_select "#achievement_#{@achievement.id} .achievement-state", text: "Не получена"
