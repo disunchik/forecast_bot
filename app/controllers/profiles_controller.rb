@@ -33,7 +33,7 @@ class ProfilesController < ApplicationController
   private
     def load_achievements
       AchievementRevealService.call
-      @obtained_achievement_ids = @user.user_achievements.order(awarded_at: :desc, id: :desc).pluck(:achievement_id)
+      @obtained_achievement_ids = @user.user_achievements.current.order(awarded_at: :desc, id: :desc).pluck(:achievement_id)
       award_order = @obtained_achievement_ids.each_with_index.to_h
       @achievements = Achievement.active.or(Achievement.where(id: @obtained_achievement_ids)).order(:name).sort_by do |achievement|
         [ award_order.fetch(achievement.id, @obtained_achievement_ids.size), achievement.name, achievement.id ]

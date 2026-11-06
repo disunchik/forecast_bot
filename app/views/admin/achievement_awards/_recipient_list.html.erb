@@ -1,0 +1,21 @@
+<% if awards.any? %>
+  <ul class="achievement-list" role="list">
+    <% awards.each do |award| %>
+      <li id="<%= dom_id(award) %>" class="achievement">
+        <%= render "shared/achievement_artwork", achievement: @achievement, reveal_secret: true %>
+        <div class="achievement-content">
+          <div class="achievement-heading"><h3><%= link_to award.user.nickname, admin_user_path(award.user) %></h3></div>
+          <p class="achievement-description">Выдана <%= moscow_time(award.awarded_at) %> · <%= award.awarded_by&.nickname || "Автоматически" %></p>
+          <% if award.revoked? %>
+            <p class="achievement-description">Отозвана <%= moscow_time(award.revoked_at) %> · <%= award.revoked_by&.nickname %>. Причина: <%= award.revocation_reason %></p>
+          <% end %>
+        </div>
+        <div class="achievement-actions">
+          <%= link_to award.revoked? ? "Восстановить" : "Отозвать", (award.revoked? ? restoration_admin_achievement_award_path(@achievement, award) : revocation_admin_achievement_award_path(@achievement, award)), class: "button button-secondary", aria: { label: "#{award.revoked? ? 'Восстановить' : 'Отозвать'} ачивку у #{award.user.nickname}" } %>
+        </div>
+      </li>
+    <% end %>
+  </ul>
+<% else %>
+  <p class="empty">Пока никто не получил эту ачивку.</p>
+<% end %>

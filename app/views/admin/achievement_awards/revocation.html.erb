@@ -1,0 +1,23 @@
+<%= render "admin/nav" %>
+<h1><%= @restoring ? "Восстановить ачивку" : "Отозвать ачивку" %></h1>
+<section class="card form-panel" aria-labelledby="award-summary-heading">
+  <h2 id="award-summary-heading"><%= @achievement.name %></h2>
+  <p>Участник: <strong><%= link_to @award.user.nickname, admin_user_path(@award.user) %></strong></p>
+  <p>Выдана: <%= moscow_time(@award.awarded_at) %></p>
+  <% if @restoring %>
+    <p>Вернём исходную выдачу в профиль участника. Повторных ЗБ не будет.</p>
+  <% else %>
+    <p>Ачивка перестанет считаться полученной и исчезнет из списка получателей. Автоматические проверки не выдадут её снова; восстановить её сможет администратор.</p>
+  <% end %>
+  <p>Баланс ЗБ и прошлые результаты не изменятся. Для коррекции ЗБ используйте отдельную ручную операцию с причиной.</p>
+  <% if @error %><p class="alert alert-error" role="alert" tabindex="-1" autofocus><%= @error %></p><% end %>
+  <%= form_with url: (@restoring ? restore_admin_achievement_award_path(@achievement, @award) : revoke_admin_achievement_award_path(@achievement, @award)), method: :post do %>
+    <%= hidden_field_tag :state_token, @state_token %>
+    <div class="field"><%= label_tag :reason, "Причина" %><%= text_area_tag :reason, params[:reason], required: true %></div>
+    <div class="check-item"><%= check_box_tag :confirmation, "1", false, required: true %><%= label_tag :confirmation, "Подтверждаю #{@restoring ? 'восстановление' : 'отзыв'} ачивки «#{@achievement.name}» у участника #{@award.user.nickname}. ЗБ не изменятся." %></div>
+    <div class="actions">
+      <%= submit_tag @restoring ? "Восстановить ачивку" : "Отозвать ачивку", class: @restoring ? "button" : "button button-danger", data: { turbo_submits_with: "Сохраняем…" } %>
+      <%= link_to "Отмена", admin_achievement_path(@achievement), class: "button button-secondary" %>
+    </div>
+  <% end %>
+</section>

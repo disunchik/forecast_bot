@@ -1,0 +1,11 @@
+<section aria-labelledby="user-achievements-heading">
+  <h2 id="user-achievements-heading" class="section-heading">Выданные ачивки</h2>
+  <% current_awards, revoked_awards = @achievement_awards.partition { |award| !award.revoked? } %>
+  <%= render "admin/users/achievement_list", awards: current_awards %>
+  <% if revoked_awards.any? %>
+    <details>
+      <summary>Отозванные ачивки (<%= revoked_awards.size %>)</summary>
+      <%= render "admin/users/achievement_list", awards: revoked_awards %>
+    </details>
+  <% end %>
+</section>

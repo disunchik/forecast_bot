@@ -247,6 +247,66 @@ class PredictionWorkflowTest < ApplicationSystemTestCase
     page.driver.browser.execute_cdp("Emulation.clearDeviceMetricsOverride")
   end
 
+  test "admin can inspect recipients revoke with a reason and restore without new gold" do
+    achievement = Achievement.create!(name: "Тестировщик", description: "За участие в тестовых прогнозах.")
+    award = GoldPointsService.award_achievement!(user: @user, achievement: achievement, admin: @admin)
+    login(@admin)
+    [ [ 1280, 900 ], [ 768, 1024 ], [ 320, 844 ], [ 390, 844 ] ].each do |width, height|
+      page.driver.browser.execute_cdp("Emulation.setDeviceMetricsOverride", width: width, height: height, deviceScaleFactor: 1, mobile: false)
+      visit admin_achievements_path
+      within "#achievement_#{achievement.id}" do
+        click_link "Получили: 1"
+      end
+      assert_current_path admin_achievement_path(achievement), ignore_query: true
+      within "#user_achievement_#{award.id}" do
+        assert_text @user.nickname
+        assert_selector "a", text: "Отозвать"
+      end
+      assert page.evaluate_script("document.documentElement.scrollWidth <= window.innerWidth")
+      if ENV["UI_ARTIFACT_DIR"]
+        page.save_screenshot(File.join(ENV.fetch("UI_ARTIFACT_DIR"), "achievement-recipients-#{width}.png"))
+      end
+      within "#user_achievement_#{award.id}" do
+        click_link "Отозвать"
+      end
+      assert_selector "nav[aria-label='Разделы админки'] a[aria-current='page']", text: "Ачивки"
+      assert_text "Автоматические проверки не выдадут её снова"
+      assert_selector "textarea[required]"
+      assert_selector "input[type='checkbox'][required]"
+      assert page.evaluate_script("document.documentElement.scrollWidth <= window.innerWidth")
+      if ENV["UI_ARTIFACT_DIR"]
+        page.execute_script("document.querySelector('.form-panel .actions').scrollIntoView({block:'end',behavior:'instant'})")
+        page.save_screenshot(File.join(ENV.fetch("UI_ARTIFACT_DIR"), "achievement-revoke-#{width}.png"))
+      end
+    end
+    fill_in "Причина", with: "Ошибочно выбрал участника"
+    check "Подтверждаю отзыв", allow_label_click: true
+    click_button "Отозвать ачивку"
+    assert_current_path admin_achievement_path(achievement)
+    assert_text "Ачивка отозвана. ЗБ сохранены."
+    assert_selector "#recipients-heading", text: "Получатели 0"
+    find("summary", text: "Отозванные выдачи").click
+    within "#user_achievement_#{award.id}" do
+      assert_text "Ошибочно выбрал участника"
+      click_link "Восстановить"
+    end
+    fill_in "Причина", with: "Отзыв был ошибкой"
+    check "Подтверждаю восстановление", allow_label_click: true
+    click_button "Восстановить ачивку"
+    assert_current_path admin_achievement_path(achievement)
+    assert_text "Ачивка восстановлена без повторного начисления ЗБ."
+    assert_selector "#recipients-heading", text: "Получатели 1"
+    assert_equal 3, @user.gold_points_balance(@season)
+    assert_equal 1, GoldPointTransaction.where(achievement: achievement).count
+    visit admin_user_path(@user)
+    within "section[aria-labelledby='user-achievements-heading']" do
+      assert_text "Тестировщик"
+      assert_link "Отозвать"
+    end
+  ensure
+    page.driver.browser.execute_cdp("Emulation.clearDeviceMetricsOverride")
+  end
+
   test "PWA manifest and service worker register without offline predictions" do
     login(@user)
     assert_selector "link[rel=manifest]", visible: :all

@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_11_06_003000) do
+ActiveRecord::Schema[8.1].define(version: 2026_11_06_160000) do
   create_table "achievements", force: :cascade do |t|
     t.boolean "active", default: true, null: false
     t.text "competition_ids", default: "[]", null: false
@@ -274,10 +274,14 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_06_003000) do
     t.datetime "awarded_at", null: false
     t.integer "awarded_by_id"
     t.datetime "created_at", null: false
+    t.text "revocation_reason"
+    t.datetime "revoked_at"
+    t.integer "revoked_by_id"
     t.datetime "updated_at", null: false
     t.integer "user_id", null: false
     t.index ["achievement_id"], name: "index_user_achievements_on_achievement_id"
     t.index ["awarded_by_id"], name: "index_user_achievements_on_awarded_by_id"
+    t.index ["revoked_by_id"], name: "index_user_achievements_on_revoked_by_id"
     t.index ["user_id", "achievement_id"], name: "index_user_achievements_on_user_id_and_achievement_id", unique: true
     t.index ["user_id"], name: "index_user_achievements_on_user_id"
   end
@@ -336,4 +340,5 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_06_003000) do
   add_foreign_key "user_achievements", "achievements"
   add_foreign_key "user_achievements", "users"
   add_foreign_key "user_achievements", "users", column: "awarded_by_id"
+  add_foreign_key "user_achievements", "users", column: "revoked_by_id"
 end

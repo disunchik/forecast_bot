@@ -1,0 +1,11 @@
+<section aria-labelledby="recipients-heading">
+  <% current_recipients, revoked_recipients = recipients.partition { |award| !award.revoked? } %>
+  <h2 id="recipients-heading" class="section-heading">Получатели <span class="numeric muted"><%= current_recipients.size %></span></h2>
+  <%= render "admin/achievement_awards/recipient_list", awards: current_recipients %>
+  <% if revoked_recipients.any? %>
+    <details>
+      <summary>Отозванные выдачи (<%= revoked_recipients.size %>)</summary>
+      <%= render "admin/achievement_awards/recipient_list", awards: revoked_recipients %>
+    </details>
+  <% end %>
+</section>

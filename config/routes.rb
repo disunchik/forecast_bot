@@ -37,8 +37,16 @@ Rails.application.routes.draw do
     resources :users, only: %i[index show edit update] do
       resources :gold_point_transactions, only: :create
     end
-    resources :achievements, except: :show do
+    resources :achievements do
       member { post :award }
+      resources :awards, only: [], controller: "achievement_awards" do
+        member do
+          get :revocation
+          post :revoke
+          get :restoration
+          post :restore
+        end
+      end
     end
     resources :scoring_rules, only: %i[index update]
     resources :audit_logs, only: :index

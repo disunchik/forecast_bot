@@ -1,0 +1,21 @@
+<% if awards.any? %>
+  <ul class="achievement-list" role="list">
+    <% awards.each do |award| %>
+      <% achievement = award.achievement %>
+      <li id="<%= dom_id(award) %>" class="achievement">
+        <%= render "shared/achievement_artwork", achievement: achievement, reveal_secret: true %>
+        <div class="achievement-content">
+          <div class="achievement-heading"><h3><%= link_to achievement.name, admin_achievement_path(achievement) %></h3></div>
+          <p class="achievement-description"><%= achievement.description.presence || "Условие не указано" %></p>
+          <p class="achievement-meta">Выдана <%= moscow_time(award.awarded_at) %></p>
+          <% if award.revoked? %><p class="achievement-description">Отозвана <%= moscow_time(award.revoked_at) %>. Причина: <%= award.revocation_reason %></p><% end %>
+        </div>
+        <div class="achievement-actions">
+          <%= link_to award.revoked? ? "Восстановить" : "Отозвать", (award.revoked? ? restoration_admin_achievement_award_path(achievement, award) : revocation_admin_achievement_award_path(achievement, award)), class: "button button-secondary", aria: { label: "#{award.revoked? ? 'Восстановить' : 'Отозвать'} ачивку «#{achievement.name}»" } %>
+        </div>
+      </li>
+    <% end %>
+  </ul>
+<% else %>
+  <p class="empty">Выданных ачивок нет.</p>
+<% end %>
