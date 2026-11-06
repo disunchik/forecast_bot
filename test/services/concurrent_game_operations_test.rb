@@ -68,6 +68,24 @@ class ConcurrentGameOperationsTest < ActiveSupport::TestCase
     assert_equal [ 5, 5 ], GoldPointTransaction.where(achievement: @achievement).order(:amount).pluck(:amount)
   end
 
+  test "parallel achievement revocations keep one audit entry and never regrant automatically" do
+    @achievement = Achievement.create!(name: "Revoke race #{SecureRandom.hex(4)}")
+    award = GoldPointsService.award_achievement!(user: @user, achievement: @achievement, admin: @admin)
+    token = AchievementAwardManagementService.new(award: award, admin: @admin).token(action: "revoke")
+    operation = -> do
+      management = AchievementAwardManagementService.new(award: UserAchievement.find(award.id), admin: @admin)
+      management.revoke!(token: token, confirmation: "1")
+      true
+    end
+    results = race(operation, operation)
+    assert_equal 1, results.count(true), results.inspect
+    assert_equal 1, results.count { |result| result.is_a?(AdminStateToken::Error) }, results.inspect
+    assert_equal 1, AuditLog.where(action: "achievement.revoke", auditable: @achievement).count
+    assert award.reload.revoked?
+    assert_equal 3, @user.gold_points_balance(@season)
+    assert_empty GoldPointsService.award_achievements!(users: [ @user ], achievement: @achievement, admin: @admin, season: @season)
+  end
+
   test "parallel season completion grants seasonal rewards once" do
     @achievement = Achievement.create!(name: "Season race #{SecureRandom.hex(4)}", rule_key: "optimist")
     5.times do |index|

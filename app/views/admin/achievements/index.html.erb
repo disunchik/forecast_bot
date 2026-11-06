@@ -6,13 +6,13 @@
       <li id="<%= dom_id(achievement) %>" class="<%= class_names("achievement", "achievement--inactive": !achievement.active?) %>">
         <%= render "shared/achievement_artwork", achievement: achievement, reveal_secret: true %>
         <div class="achievement-content">
-          <div class="achievement-heading"><h2><%= achievement.name %></h2></div>
+          <div class="achievement-heading"><h2><%= link_to achievement.name, admin_achievement_path(achievement) %></h2></div>
           <p class="achievement-description"><%= achievement.description.presence || "Условие не указано" %></p>
           <p class="achievement-meta">
             <span><%= achievement.rule_key.present? ? "Автоматически" : "Вручную" %></span>
             <span><%= achievement.secret? ? (achievement.revealed? ? "Секретная · раскрыта" : "Секретная · скрыта") : "Обычная" %></span>
             <span><%= achievement.active? ? "Активна" : "Отключена" %></span>
-            <span>Получили: <strong class="numeric"><%= @achievement_recipient_counts.fetch(achievement.id, 0) %></strong></span>
+            <span><%= link_to admin_achievement_path(achievement, anchor: "recipients-heading") do %>Получили: <strong class="numeric"><%= @achievement_recipient_counts.fetch(achievement.id, 0) %></strong><% end %></span>
           </p>
         </div>
         <div class="achievement-actions"><%= link_to "Изменить", edit_admin_achievement_path(achievement), class: "button button-secondary", aria: { label: "Изменить ачивку «#{achievement.name}»" } %></div>

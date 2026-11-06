@@ -12,7 +12,8 @@ module Admin
     end
 
     def show
-      available_achievements = Achievement.active.where.not(id: @user.achievement_ids).order(:name).to_a
+      @achievement_awards = @user.user_achievements.includes(:achievement, :awarded_by, :revoked_by).order(awarded_at: :desc, id: :desc).to_a
+      available_achievements = Achievement.active.where.not(id: @achievement_awards.map(&:achievement_id)).order(:name).to_a
       @manual_achievements, @automatic_achievements = available_achievements.partition { |achievement| achievement.rule_key.blank? }
       @transactions = active_season ? @user.gold_point_transactions.where(season: active_season).order(created_at: :desc) : GoldPointTransaction.none
       @forecasts = active_season ? @user.forecasts.joins(:match).where(matches: { season_id: active_season.id }).includes(:match, :forecast_score).order("matches.forecast_number DESC") : Forecast.none

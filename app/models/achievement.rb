@@ -1,6 +1,6 @@
 class Achievement < ApplicationRecord
   has_many :user_achievements, dependent: :destroy
-  has_many :users, through: :user_achievements
+  has_many :users, -> { where(user_achievements: { revoked_at: nil }) }, through: :user_achievements
   belongs_to :first_award_season, class_name: "Season", optional: true
 
   serialize :competition_ids, coder: JSON

@@ -33,7 +33,10 @@ class GoldPointsService
   private_class_method :manual_transaction!
 
   def self.award_achievement!(user:, achievement:, admin:, season: Season.active.first)
-    raise Error, "Ачивка уже выдана" if user.user_achievements.exists?(achievement: achievement)
+    previous_award = user.user_achievements.find_by(achievement: achievement)
+    if previous_award
+      raise Error, previous_award.revoked? ? "Ачивка отозвана. Восстановите исходную выдачу в истории ачивки." : "Ачивка уже выдана"
+    end
 
     awards = award_achievements!(users: [ user ], achievement: achievement, admin: admin, season: season)
     raise Error, "Ачивка уже выдана" if awards.empty?

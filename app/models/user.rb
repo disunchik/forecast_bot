@@ -6,7 +6,7 @@ class User < ApplicationRecord
   has_many :forecast_scores, through: :forecasts
   has_many :gold_point_transactions, dependent: :destroy
   has_many :user_achievements, dependent: :destroy
-  has_many :achievements, through: :user_achievements
+  has_many :achievements, -> { where(user_achievements: { revoked_at: nil }) }, through: :user_achievements
 
   enum :role, { user: 0, admin: 1 }
 

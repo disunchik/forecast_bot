@@ -1,11 +1,11 @@
 module Admin
   class AchievementsController < BaseController
-    before_action :set_achievement, only: %i[edit update destroy award]
+    before_action :set_achievement, only: %i[show edit update destroy award]
 
     def index
       AchievementRevealService.call
       @achievements = Achievement.order(:name)
-      @achievement_recipient_counts = UserAchievement.group(:achievement_id).count
+      @achievement_recipient_counts = UserAchievement.current.group(:achievement_id).count
     end
 
     def new
@@ -24,7 +24,12 @@ module Admin
       end
     end
 
+    def show
+      load_recipients
+    end
+
     def edit
+      load_recipients
     end
 
     def update
@@ -35,6 +40,7 @@ module Admin
                               details: { before: before, after: @achievement.attributes })
           redirect_to admin_achievements_path, notice: "Ачивка обновлена."
         else
+          load_recipients
           render :edit, status: :unprocessable_entity
         end
       end
@@ -61,6 +67,10 @@ module Admin
     private
       def set_achievement
         @achievement = Achievement.find(params[:id])
+      end
+
+      def load_recipients
+        @recipients = @achievement.user_achievements.includes(:user, :awarded_by, :revoked_by).order(awarded_at: :desc, id: :desc).to_a
       end
 
       def achievement_params

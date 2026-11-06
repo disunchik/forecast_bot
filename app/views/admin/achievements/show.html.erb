@@ -1,0 +1,9 @@
+<%= render "admin/nav" %>
+<div class="page-heading">
+  <h1><%= @achievement.name %></h1>
+  <%= link_to "Изменить", edit_admin_achievement_path(@achievement), class: "button button-secondary" %>
+</div>
+<p><%= @achievement.description.presence || "Условие не указано" %></p>
+<p class="muted"><%= @achievement.rule_label %> · <%= @achievement.active? ? "Активна" : "Отключена" %></p>
+<%= render "recipients", recipients: @recipients %>
+<div class="actions"><%= link_to "Все ачивки", admin_achievements_path, class: "button button-secondary" %></div>
