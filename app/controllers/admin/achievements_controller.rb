@@ -5,6 +5,7 @@ module Admin
     def index
       AchievementRevealService.call
       @achievements = Achievement.order(:name)
+      @achievement_recipient_counts = UserAchievement.group(:achievement_id).count
     end
 
     def new

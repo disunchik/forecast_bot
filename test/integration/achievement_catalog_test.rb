@@ -60,7 +60,7 @@ class AchievementCatalogTest < ActionDispatch::IntegrationTest
     sign_in_as(@admin)
     get admin_achievements_path
     assert_response :success
-    assert_select "tbody tr", count: 12
+    assert_select ".achievement-list > li", count: 12
     get admin_user_path(@user)
     tester = Achievement.find_by!(name: "Тестировщик")
     assert_select "form[action=?]", award_admin_achievement_path(tester) do

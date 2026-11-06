@@ -2,20 +2,24 @@
   <h1>Ачивки <span class="muted numeric"><%= @obtained_achievement_ids.size %>/<%= @achievements.size %></span></h1>
   <%= link_to "Вернуться в профиль", profile_path, class: "button button-secondary" %>
 </div>
-<div class="cards">
-  <% @achievements.each do |achievement| %>
-    <% obtained = @obtained_achievement_ids.include?(achievement.id) %>
-    <article class="card">
-      <div class="section-heading achievement-heading">
-        <h2><%= achievement.name %></h2>
-        <% if obtained %><span class="badge badge-gold">Получена</span><% elsif achievement.secret? && !achievement.revealed? %><span class="badge">Секретная</span><% end %>
-      </div>
-      <% if achievement.secret? && !achievement.revealed? %>
-        <p class="muted">Условие пока скрыто.</p>
-      <% else %>
-        <p class="muted"><%= achievement.description.presence || "Условие не указано" %></p>
-      <% end %>
-    </article>
-  <% end %>
-  <% if @achievements.empty? %><div class="card empty">Список ачивок появится здесь.</div><% end %>
-</div>
+<% if @achievements.any? %>
+  <ul class="achievement-list" role="list" aria-label="Ваши достижения">
+    <% @achievements.each do |achievement| %>
+      <% obtained = @obtained_achievement_ids.include?(achievement.id) %>
+      <li id="<%= dom_id(achievement) %>" class="<%= class_names("achievement", "achievement--earned": obtained) %>">
+        <%= render "shared/achievement_artwork", achievement: achievement %>
+        <div class="achievement-content">
+          <div class="achievement-heading"><h2><%= achievement.name %></h2></div>
+          <% if achievement.secret? && !achievement.revealed? %>
+            <p class="achievement-description">Условие пока скрыто.</p>
+          <% else %>
+            <p class="achievement-description"><%= achievement.description.presence || "Условие не указано" %></p>
+          <% end %>
+        </div>
+        <span class="achievement-state"><%= obtained ? "Получена" : "Не получена" %></span>
+      </li>
+    <% end %>
+  </ul>
+<% else %>
+  <p class="empty">Список ачивок появится здесь.</p>
+<% end %>
