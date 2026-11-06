@@ -1,1 +1,29 @@
-<%= render "shared/errors", object: achievement %><%= form_with model: [:admin, achievement] do |form| %><div class="field"><%= form.label :name, "Название" %><%= form.text_field :name, required: true %></div><div class="field"><%= form.label :description, "Описание / условие" %><%= form.text_area :description %></div><div class="check-list"><div class="check-item"><%= form.check_box :secret %><%= form.label :secret, "Секретная" %></div><div class="check-item"><%= form.check_box :active %><%= form.label :active, "Активна" %></div></div><div class="actions"><%= form.submit "Сохранить" %><%= link_to "Назад", admin_achievements_path, class: "button button-secondary" %></div><% end %>
+<%= render "shared/errors", object: achievement %>
+<%= form_with model: [:admin, achievement] do |form| %>
+  <div class="field"><%= form.label :name, "Название" %><%= form.text_field :name, required: true %></div>
+  <div class="field"><%= form.label :description, "Описание / условие" %><%= form.text_area :description %></div>
+  <div class="field">
+    <%= form.label :rule_key, "Выдача ачивки" %>
+    <%= form.select :rule_key, AchievementRules.options, { include_blank: "Вручную администратором" }, { aria: { describedby: "achievement-rule-hint" } } %>
+    <p id="achievement-rule-hint" class="muted">Матчевые условия проверяются после подтверждения результата, сезонные — кнопкой «Завершить сезон». Ручная выдача остаётся доступна.</p>
+  </div>
+  <fieldset>
+    <legend>Турниры для «Главного по чашечкам»</legend>
+    <p class="muted">Выберите еврокубки, в которых проверять точный счёт. Для остальных правил этот список не используется.</p>
+    <%= hidden_field_tag "achievement[competition_ids][]", "" %>
+    <div class="check-list">
+      <% Competition.order(:name).each do |competition| %>
+        <div class="check-item">
+          <%= check_box_tag "achievement[competition_ids][]", competition.id, achievement.competition_ids.include?(competition.id), id: "achievement_competition_#{competition.id}" %>
+          <%= label_tag "achievement_competition_#{competition.id}", competition.name %>
+        </div>
+      <% end %>
+    </div>
+  </fieldset>
+  <div class="check-list">
+    <div class="check-item"><%= form.check_box :secret %><%= form.label :secret, "Секретная" %></div>
+    <div class="check-item"><%= form.check_box :active %><%= form.label :active, "Активна" %></div>
+  </div>
+  <p class="muted">Все первые получатели в одном туре получают повышенные ЗБ. Условие секретной ачивки раскрывается с открытием прогнозов следующего тура.</p>
+  <div class="actions"><%= form.submit "Сохранить" %><%= link_to "Назад", admin_achievements_path, class: "button button-secondary" %></div>
+<% end %>

@@ -3,6 +3,7 @@ module Admin
     before_action :set_achievement, only: %i[edit update destroy award]
 
     def index
+      AchievementRevealService.call
       @achievements = Achievement.order(:name)
     end
 
@@ -12,10 +13,13 @@ module Admin
 
     def create
       @achievement = Achievement.new(achievement_params)
-      if @achievement.save
-        redirect_to admin_achievements_path, notice: "Ачивка создана."
-      else
-        render :new, status: :unprocessable_entity
+      Achievement.transaction do
+        if @achievement.save
+          AuditLogger.record!(admin: current_user, action: "achievement.create", auditable: @achievement, details: { after: @achievement.attributes })
+          redirect_to admin_achievements_path, notice: "Ачивка создана."
+        else
+          render :new, status: :unprocessable_entity
+        end
       end
     end
 
@@ -23,10 +27,15 @@ module Admin
     end
 
     def update
-      if @achievement.update(achievement_params)
-        redirect_to admin_achievements_path, notice: "Ачивка обновлена."
-      else
-        render :edit, status: :unprocessable_entity
+      Achievement.transaction do
+        before = @achievement.attributes
+        if @achievement.update(achievement_params)
+          AuditLogger.record!(admin: current_user, action: "achievement.update", auditable: @achievement,
+                              details: { before: before, after: @achievement.attributes })
+          redirect_to admin_achievements_path, notice: "Ачивка обновлена."
+        else
+          render :edit, status: :unprocessable_entity
+        end
       end
     end
 
@@ -54,7 +63,7 @@ module Admin
       end
 
       def achievement_params
-        params.require(:achievement).permit(:name, :description, :secret, :active)
+        params.require(:achievement).permit(:name, :description, :secret, :active, :rule_key, competition_ids: [])
       end
   end
 end

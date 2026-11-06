@@ -10,15 +10,21 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_11_01_190000) do
+ActiveRecord::Schema[8.1].define(version: 2026_11_06_003000) do
   create_table "achievements", force: :cascade do |t|
     t.boolean "active", default: true, null: false
+    t.text "competition_ids", default: "[]", null: false
     t.datetime "created_at", null: false
     t.text "description"
+    t.integer "first_award_points"
+    t.integer "first_award_round"
+    t.integer "first_award_season_id"
     t.string "name", null: false
     t.boolean "revealed", default: false, null: false
+    t.string "rule_key"
     t.boolean "secret", default: false, null: false
     t.datetime "updated_at", null: false
+    t.index ["first_award_season_id"], name: "index_achievements_on_first_award_season_id"
     t.index ["name"], name: "index_achievements_on_name", unique: true
   end
 
@@ -192,9 +198,12 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_01_190000) do
 
   create_table "seasons", force: :cascade do |t|
     t.boolean "active", default: false, null: false
+    t.datetime "completed_at"
+    t.integer "completed_by_id"
     t.datetime "created_at", null: false
     t.string "name", null: false
     t.datetime "updated_at", null: false
+    t.index ["completed_by_id"], name: "index_seasons_on_completed_by_id"
     t.index ["name"], name: "index_seasons_on_name", unique: true
   end
 
@@ -292,6 +301,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_01_190000) do
     t.index ["nickname_key"], name: "index_users_on_nickname_key", unique: true
   end
 
+  add_foreign_key "achievements", "seasons", column: "first_award_season_id"
   add_foreign_key "audit_logs", "users", column: "admin_id"
   add_foreign_key "forecast_assists", "forecasts"
   add_foreign_key "forecast_assists", "players"
@@ -314,6 +324,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_01_190000) do
   add_foreign_key "match_results", "users", column: "confirmed_by_id"
   add_foreign_key "matches", "competitions"
   add_foreign_key "matches", "seasons"
+  add_foreign_key "seasons", "users", column: "completed_by_id"
   add_foreign_key "sessions", "users"
   add_foreign_key "standing_entries", "standing_snapshots"
   add_foreign_key "standing_entries", "users"

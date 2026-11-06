@@ -15,7 +15,7 @@ class ForecastSubmissionService
       @forecast.match = @match
       @forecast.submitted_at = Time.current
       @forecast.valid?
-      if !@match.season.active? || !@match.forecast_open?
+      if !@match.season.active? || @match.season.completed? || !@match.forecast_open?
         @forecast.errors.add(:base, "Приём прогнозов на этот матч закрыт")
       end
       previous_stake = @forecast.persisted? ? @user.forecasts.find(@forecast.id).gold_points_stake : 0

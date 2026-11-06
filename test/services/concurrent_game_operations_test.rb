@@ -9,6 +9,8 @@ class ConcurrentGameOperationsTest < ActiveSupport::TestCase
   teardown do
     if @season&.persisted?
       GoldPointTransaction.where(season: @season).delete_all
+      @achievement&.destroy!
+      @achievement = nil
       @season.matches.destroy_all
       @season.destroy!
     end
@@ -56,14 +58,38 @@ class ConcurrentGameOperationsTest < ActiveSupport::TestCase
     assert_equal 0, @user.available_gold_points(@season)
   end
 
-  test "parallel first secret awards yield only one first reward" do
+  test "parallel first secret awards in one round both receive the first reward" do
     @achievement = Achievement.create!(name: "Race #{SecureRandom.hex(4)}", secret: true)
     users = [ @user, @other_user ]
     results = race(*users.map do |user|
       -> { GoldPointsService.award_achievement!(user: User.find(user.id), achievement: Achievement.find(@achievement.id), admin: @admin, season: @season); true }
     end)
     assert_equal [ true, true ], results, results.inspect
-    assert_equal [ 1, 5 ], GoldPointTransaction.where(achievement: @achievement).order(:amount).pluck(:amount)
+    assert_equal [ 5, 5 ], GoldPointTransaction.where(achievement: @achievement).order(:amount).pluck(:amount)
+  end
+
+  test "parallel season completion grants seasonal rewards once" do
+    @achievement = Achievement.create!(name: "Season race #{SecureRandom.hex(4)}", rule_key: "optimist")
+    5.times do |index|
+      match = index.zero? ? @match : make_match
+      match.update!(kickoff_at: 1.day.ago)
+      make_forecast(match: match)
+      MatchConfirmationService.new(match_result: draft_result(match: match), admin: @admin).confirm!
+    end
+    token = SeasonCompletionService.new(season: @season, admin: @admin).token
+    operation = -> do
+      service = SeasonCompletionService.new(season: Season.find(@season.id), admin: @admin)
+      service.complete!(token: token, confirmation: "1")
+      true
+    rescue SeasonCompletionService::Error
+      false
+    end
+    results = race(operation, operation)
+    assert_equal [ false, true ], results.sort_by(&:to_s), results.inspect
+    assert @season.reload.completed?
+    assert_equal 1, UserAchievement.where(achievement: @achievement).count
+    assert_equal 3, GoldPointTransaction.where(achievement: @achievement).sum(:amount)
+    assert_equal 1, AuditLog.where(action: "season.complete", auditable: @season).count
   end
 
   test "parallel confirmation never duplicates scores or gold" do

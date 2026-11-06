@@ -36,6 +36,12 @@ class MatchRollbackService
     matches = @season.matches.where("forecast_number > ?", @keep_through_number).order(forecast_number: :desc)
 
     SeasonTransaction.call(@season) do
+      @season.reload
+      if @season.completed? && affected_matches.exists?
+        @season.update!(completed_at: nil, completed_by: nil)
+        AuditLogger.record!(admin: @admin, action: "season.reopen", auditable: @season,
+                            details: { reason: reason, achievements_preserved: true })
+      end
       matches.each do |match|
         result = match.match_result
         next unless result&.confirmed?

@@ -28,6 +28,7 @@ module Admin
       @match.season ||= active_season
 
       ActiveRecord::Base.transaction do
+        Season.where(id: @match.season_id).update_all("id = id") if @match.season_id
         @match.save!
         save_question!(@match)
         AuditLogger.record!(admin: current_user, action: "match.create", auditable: @match, details: { forecast_number: @match.forecast_number })
