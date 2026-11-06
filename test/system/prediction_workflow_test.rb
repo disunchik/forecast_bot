@@ -255,7 +255,8 @@ class PredictionWorkflowTest < ApplicationSystemTestCase
       page.driver.browser.execute_cdp("Emulation.setDeviceMetricsOverride", width: width, height: height, deviceScaleFactor: 1, mobile: false)
       visit admin_achievements_path
       within "#achievement_#{achievement.id}" do
-        click_link "Получили: 1"
+        assert_text "Получили: 1"
+        click_link achievement.name
       end
       assert_current_path admin_achievement_path(achievement), ignore_query: true
       within "#user_achievement_#{award.id}" do
