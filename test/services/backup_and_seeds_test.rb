@@ -9,7 +9,7 @@ class BackupAndSeedsTest < ActiveSupport::TestCase
     load Rails.root.join("db/seeds.rb")
     rule = ScoringRule.find_by!(key: "nil_nil")
     rule.update!(value: 42)
-    assert_no_difference [ "Season.count", "Competition.count", "ScoringRule.count" ] do
+    assert_no_difference [ "Season.count", "Competition.count", "ScoringRule.count", "Achievement.count", "AuditLog.count" ] do
       load Rails.root.join("db/seeds.rb")
     end
     assert_equal 42, rule.reload.value

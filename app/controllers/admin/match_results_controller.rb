@@ -91,7 +91,8 @@ module Admin
       end
 
       def confirmation_state
-        { match: MatchAuditSnapshot.match_state(@match), rules: @result.reload.scoring_snapshot.presence || ScoringRule.snapshot }
+        { match: MatchAuditSnapshot.match_state(@match), rules: @result.reload.scoring_snapshot.presence || ScoringRule.snapshot,
+          achievements: Achievement.order(:id).map(&:attributes), awards: UserAchievement.order(:id).pluck(:id) }
       end
 
       def result_params

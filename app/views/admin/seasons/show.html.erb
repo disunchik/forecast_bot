@@ -1,5 +1,15 @@
-<%= render "admin/nav" %><h1>Сезон <%= @season.name %></h1><p><span class="badge"><%= @season.active? ? "Активный" : "Архив" %></span></p>
+<%= render "admin/nav" %><h1>Сезон <%= @season.name %></h1><p><span class="badge"><%= @season.completed? ? "Завершён" : (@season.active? ? "Активный" : "Архив") %></span></p>
 <div class="actions"><%= link_to "Таблица сезона", admin_standings_path(season_id: @season.id), class: "button" %><%= link_to "Результаты сезона", admin_results_path(season_id: @season.id), class: "button" %></div>
+<section class="card" aria-labelledby="season-completion-heading">
+  <h2 id="season-completion-heading" class="section-heading"><%= @season.completed? ? "Сезон завершён" : "Завершение сезона" %></h2>
+  <% if @season.completed? %>
+    <p>Завершён <%= moscow_time(@season.completed_at) %>. Итоги и сезонные ачивки сохранены.</p>
+    <p class="muted">Если нужно исправить результат, используйте откат ниже. Сезон снова станет незавершённым; полученные ачивки и ЗБ останутся участникам.</p>
+  <% else %>
+    <p>После расчёта всех матчей подведите итоги и выдайте сезонные ачивки. Таблица и профиль останутся доступны участникам.</p>
+    <div class="actions"><%= link_to "Завершить сезон", completion_admin_season_path(@season), class: "button" %></div>
+  <% end %>
+</section>
 <h2 class="section-heading">Матчи</h2><div class="table-wrap"><table><thead><tr><th scope="col">№</th><th scope="col">Матч</th><th scope="col">Результат</th></tr></thead><tbody><% @matches.each do |match| %><tr><td class="numeric"><%= match.forecast_number %></td><td><%= link_to match_title(match), admin_match_path(match) %></td><td><%= result_state_label(match.match_result) %></td></tr><% end %><% if @matches.empty? %><tr><td colspan="3" class="empty">Матчи сезона пока не добавлены.</td></tr><% end %></tbody></table></div>
 <h2 class="section-heading">Откат результатов</h2><div class="card"><p class="muted">Оставляет подтверждёнными результаты до указанного номера включительно. Более поздние расчёты и таблицы отменяются, списанные ставки возвращаются в резерв. Уже выданные ЗБ за места остаются участникам; повторный расчёт начислит только недостающую разницу при увеличении награды. Прогнозы и введённые события сохраняются.</p><%= form_with url: rollback_preview_admin_season_path(@season), method: :get do |f| %><div class="field field-short"><%= label_tag :keep_through_number, "Оставить результаты до матча №" %><%= number_field_tag :keep_through_number, nil, min: 0, required: true %></div><%= f.submit "Посмотреть последствия отката", class: "button button-danger", data: { turbo_confirm: "Точно откатить более поздние результаты?" } %><% end %></div>
 

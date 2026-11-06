@@ -39,6 +39,7 @@ class MatchAuditSnapshot
 
   def self.season_state(season)
     {
+      "season" => season.reload.attributes,
       "matches" => season.matches.order(:id).map { |match| match_state(match) },
       "gold" => season.gold_point_transactions.order(:id).pluck(:id, :user_id, :kind, :amount)
     }

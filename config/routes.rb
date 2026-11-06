@@ -44,6 +44,8 @@ Rails.application.routes.draw do
     resources :audit_logs, only: :index
     resources :seasons, only: %i[index show new create] do
       member do
+        get :completion
+        post :complete
         get :rollback_preview
         patch :activate
         post :rollback

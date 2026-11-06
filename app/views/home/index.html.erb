@@ -2,7 +2,7 @@
   <h1>Главная</h1>
   <% if active_season %>
     <div class="season-summary">
-      <span class="muted">Сезон <strong><%= active_season.name %></strong></span>
+      <span class="muted">Сезон <strong><%= active_season.name %></strong><% if active_season.completed? %> · завершён<% end %></span>
       <span class="gold-available">Доступно: <strong><%= current_user.available_gold_points(active_season) %> ЗБ</strong></span>
     </div>
   <% end %>

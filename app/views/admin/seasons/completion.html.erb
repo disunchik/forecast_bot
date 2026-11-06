@@ -1,0 +1,22 @@
+<%= render "admin/nav" %>
+<h1>Завершение сезона · <%= @season.name %></h1>
+<section class="card" aria-labelledby="completion-summary-heading">
+  <h2 id="completion-summary-heading" class="section-heading">Итоги сезона</h2>
+  <p>Проверим условия сезонных ачивок и начислим ЗБ. «Оптимист» требует минимум 5 прогнозов на подтверждённые матчи и ни одного прогноза на поражение Ромы за сезон.</p>
+  <p>Новые матчи в завершённый сезон добавлять нельзя. Итоги останутся видны участникам до переключения на следующий сезон. Исправления доступны через откат; уже полученные награды сохранятся.</p>
+  <% if @season.completed? %>
+    <p class="badge badge-open">Этот сезон уже завершён.</p>
+  <% elsif @pending_matches.any? %>
+    <h3>Сначала подтвердите или отмените эти матчи</h3>
+    <ul><% @pending_matches.each do |match| %><li><%= link_to "№#{match.forecast_number} · #{match_title(match)}", admin_match_path(match) %></li><% end %></ul>
+  <% elsif @season.matches.finished.none? %>
+    <p class="empty">Для завершения нужен хотя бы один подтверждённый результат.</p>
+  <% else %>
+    <%= form_with url: complete_admin_season_path(@season), method: :post do %>
+      <%= hidden_field_tag :state_token, @state_token %>
+      <div class="check-item"><%= check_box_tag :confirmation, "1", false, required: true %><%= label_tag :confirmation, "Все матчи рассчитаны или отменены. Подтверждаю завершение сезона и выдачу сезонных наград." %></div>
+      <div class="actions"><%= submit_tag "Подтвердить завершение сезона", class: "button", data: { turbo_submits_with: "Завершаем сезон…" } %></div>
+    <% end %>
+  <% end %>
+  <div class="actions"><%= link_to "Вернуться к сезону", admin_season_path(@season), class: "button button-secondary" %></div>
+</section>

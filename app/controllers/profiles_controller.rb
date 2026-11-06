@@ -32,6 +32,7 @@ class ProfilesController < ApplicationController
 
   private
     def load_achievements
+      AchievementRevealService.call
       @obtained_achievement_ids = @user.achievement_ids
       @achievements = Achievement.active.or(Achievement.where(id: @obtained_achievement_ids)).order(:name)
     end

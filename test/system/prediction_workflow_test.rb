@@ -104,6 +104,118 @@ class PredictionWorkflowTest < ApplicationSystemTestCase
     end
   end
 
+  test "admin finishes a season on mobile and participants retain access to their rewards" do
+    achievement = Achievement.create!(name: "Оптимист", rule_key: "optimist", description: "Не прогнозировал поражение Ромы, минимум 5 матчей")
+    5.times do |index|
+      match = index.zero? ? @match : make_match
+      match.update!(kickoff_at: 1.day.ago)
+      [ @user, @other_user ].each { |user| make_forecast(match: match, user: user) }
+      MatchConfirmationService.new(match_result: draft_result(match: match), admin: @admin).confirm!
+    end
+    login(@admin)
+    [ [ 1280, 900 ], [ 390, 844 ] ].each do |width, height|
+      page.current_window.resize_to(width, height)
+      page.driver.browser.execute_cdp("Emulation.setDeviceMetricsOverride", width: width, height: height, deviceScaleFactor: 1, mobile: false)
+      assert_equal width, page.evaluate_script("window.innerWidth")
+      visit edit_admin_achievement_path(achievement)
+      assert_selector "select#achievement_rule_key option:checked", text: "Оптимист · сезон без прогноза на поражение, минимум 5 матчей"
+      assert page.evaluate_script("document.documentElement.scrollWidth <= window.innerWidth")
+      if ENV["UI_ARTIFACT_DIR"]
+        page.save_screenshot(File.join(ENV.fetch("UI_ARTIFACT_DIR"), "achievement-form-#{width}.png"))
+      end
+      visit admin_season_path(@season)
+      click_link "Завершить сезон", exact: true
+      assert_current_path completion_admin_season_path(@season)
+      assert_text "минимум 5 прогнозов"
+      assert page.evaluate_script("document.documentElement.scrollWidth <= window.innerWidth")
+      if ENV["UI_ARTIFACT_DIR"]
+        page.save_screenshot(File.join(ENV.fetch("UI_ARTIFACT_DIR"), "season-completion-#{width}.png"))
+      end
+    end
+    check "confirmation"
+    if ENV["UI_ARTIFACT_DIR"]
+      page.save_screenshot(File.join(ENV.fetch("UI_ARTIFACT_DIR"), "season-confirmation-390.png"))
+    end
+    click_button "Подтвердить завершение сезона"
+    assert_current_path admin_season_path(@season)
+    assert_text "Сезон завершён. Выдано сезонных ачивок: 2."
+    assert_no_link "Завершить сезон", exact: true
+    assert @season.reload.completed?
+    assert_equal [ 3, 3 ], GoldPointTransaction.where(achievement: achievement).order(:amount).pluck(:amount)
+    visit profile_path
+    click_button "Выйти"
+    login(@user)
+    assert_text "завершён"
+    visit achievements_profile_path
+    assert_text "Оптимист"
+    assert_text "Получена"
+    visit standings_path
+    assert_selector "h1", text: "Текущая таблица"
+  ensure
+    page.driver.browser.execute_cdp("Emulation.clearDeviceMetricsOverride")
+  end
+
+  test "wolf achievement lists distinguish earned states and keep secret illustrations private" do
+    Competition.find_or_create_by!(name: "Лига чемпионов")
+    AchievementCatalog.install!
+    @match.update!(kickoff_at: 4.days.from_now)
+    romanist = Achievement.find_by!(name: "Романист")
+    GoldPointsService.award_achievement!(user: @user, achievement: romanist, admin: @admin)
+    secret = Achievement.create!(name: "Тайна волка", secret: true, rule_key: "three_promotions", description: "PRIVATE SECRET CONDITION")
+    GoldPointsService.award_achievement!(user: @user, achievement: secret, admin: @admin)
+    login(@user)
+    [ [ 1280, 900 ], [ 768, 1024 ], [ 320, 844 ], [ 390, 844 ] ].each do |width, height|
+      page.current_window.resize_to(width, height)
+      page.driver.browser.execute_cdp("Emulation.setDeviceMetricsOverride", width: width, height: height, deviceScaleFactor: 1, mobile: false)
+      visit achievements_profile_path
+      assert_current_path achievements_profile_path
+      assert_equal width, page.evaluate_script("window.innerWidth")
+      assert_selector ".achievement-list > li", count: 13
+      assert_selector ".achievement--earned", count: 2
+      assert_no_selector "table"
+      within "#achievement_#{romanist.id}" do
+        assert_text "Получена"
+        assert_selector "img[src*='romanist']"
+      end
+      within "#achievement_#{secret.id}" do
+        assert_selector "img[src*='mystery']"
+        assert_no_text "PRIVATE SECRET CONDITION"
+      end
+      image_status = page.evaluate_async_script(<<~JS)
+        const done = arguments[0];
+        Promise.all(Array.from(document.querySelectorAll('.achievement-artwork img'), image =>
+          fetch(image.src).then(response => response.ok))).then(done)
+      JS
+      assert image_status.all?, "Every miniature must load from the local asset pipeline"
+      assert page.evaluate_script("document.documentElement.scrollWidth <= window.innerWidth")
+      assert page.evaluate_script("Array.from(document.querySelectorAll('.achievement')).every(row => { const box = row.getBoundingClientRect(); return box.left >= 0 && box.right <= window.innerWidth; })")
+      if ENV["UI_ARTIFACT_DIR"]
+        page.execute_script("document.querySelectorAll('.achievement-artwork img').forEach(image => image.loading = 'eager')")
+        page.evaluate_async_script("const done=arguments[0]; Promise.all(Array.from(document.querySelectorAll('.achievement-artwork img'), image => image.decode())).then(done)")
+        page.save_screenshot(File.join(ENV.fetch("UI_ARTIFACT_DIR"), "achievement-list-#{width}.png"))
+        page.execute_script("document.getElementById(arguments[0]).scrollIntoView({block:'center', behavior:'instant'})", "achievement_#{romanist.id}")
+        page.save_screenshot(File.join(ENV.fetch("UI_ARTIFACT_DIR"), "achievement-earned-#{width}.png"))
+      end
+    end
+    visit profile_path
+    click_button "Выйти"
+    login(@admin)
+    visit admin_achievements_path
+    assert_selector ".achievement-list > li", count: 13
+    assert_no_selector "table"
+    assert page.evaluate_script("document.documentElement.scrollWidth <= window.innerWidth")
+    if ENV["UI_ARTIFACT_DIR"]
+      page.save_screenshot(File.join(ENV.fetch("UI_ARTIFACT_DIR"), "achievement-admin-390.png"))
+    end
+    within "#achievement_#{romanist.id}" do
+      assert_text "Получили: 1"
+      click_link "Изменить"
+    end
+    assert_current_path edit_admin_achievement_path(romanist)
+  ensure
+    page.driver.browser.execute_cdp("Emulation.clearDeviceMetricsOverride")
+  end
+
   test "PWA manifest and service worker register without offline predictions" do
     login(@user)
     assert_selector "link[rel=manifest]", visible: :all

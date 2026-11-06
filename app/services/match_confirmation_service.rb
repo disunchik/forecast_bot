@@ -43,6 +43,8 @@ class MatchConfirmationService
         StandingsCalculator.new(match: match).rebuild_snapshot!
       end
 
+      AutomaticAchievementsService.for_match!(match: @match, admin: @admin)
+
       AuditLogger.record!(admin: @admin, action: "match_result.confirm", auditable: match_result,
                           details: { match_id: @match.id, forecast_number: @match.forecast_number, rules: match_result.scoring_snapshot })
     end
@@ -50,6 +52,7 @@ class MatchConfirmationService
 
   private
     def validate_result!
+      raise Error, "Сезон завершён. Для исправления сначала откатите результаты." if @match.season.reload.completed?
       raise Error, "Дождитесь закрытия приёма прогнозов" if Time.current < @match.forecast_closes_at
       raise Error, "Перенесённый матч нельзя рассчитывать" if @match.postponed?
       raise Error, "Отменённый матч нельзя рассчитывать" if @match.cancelled?

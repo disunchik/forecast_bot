@@ -1,2 +1,24 @@
-<%= render "admin/nav" %><div class="page-heading"><h1>Ачивки</h1><%= link_to "Создать ачивку", new_admin_achievement_path, class: "button" %></div>
-<div class="table-wrap"><table><thead><tr><th scope="col">Название</th><th scope="col">Тип</th><th scope="col">Раскрыта</th><th scope="col">Активна</th><th scope="col">Получили</th><th scope="col"><span class="sr-only">Действие</span></th></tr></thead><tbody><% @achievements.each do |a| %><tr><td><strong><%= a.name %></strong><br><span class="muted"><%= a.description %></span></td><td><%= a.secret? ? "Секретная" : "Обычная" %></td><td><%= a.revealed? ? "Да" : "Нет" %></td><td><%= a.active? ? "Да" : "Нет" %></td><td class="numeric"><%= a.user_achievements.count %></td><td><%= link_to "Изменить", edit_admin_achievement_path(a) %></td></tr><% end %><% if @achievements.empty? %><tr><td colspan="6" class="empty">Ачивки пока не добавлены.</td></tr><% end %></tbody></table></div>
+<%= render "admin/nav" %>
+<div class="page-heading"><h1>Ачивки</h1><%= link_to "Создать ачивку", new_admin_achievement_path, class: "button" %></div>
+<% if @achievements.any? %>
+  <ul class="achievement-list achievement-list--admin" role="list" aria-label="Каталог достижений">
+    <% @achievements.each do |achievement| %>
+      <li id="<%= dom_id(achievement) %>" class="<%= class_names("achievement", "achievement--inactive": !achievement.active?) %>">
+        <%= render "shared/achievement_artwork", achievement: achievement, reveal_secret: true %>
+        <div class="achievement-content">
+          <div class="achievement-heading"><h2><%= achievement.name %></h2></div>
+          <p class="achievement-description"><%= achievement.description.presence || "Условие не указано" %></p>
+          <p class="achievement-meta">
+            <span><%= achievement.rule_key.present? ? "Автоматически" : "Вручную" %></span>
+            <span><%= achievement.secret? ? (achievement.revealed? ? "Секретная · раскрыта" : "Секретная · скрыта") : "Обычная" %></span>
+            <span><%= achievement.active? ? "Активна" : "Отключена" %></span>
+            <span>Получили: <strong class="numeric"><%= @achievement_recipient_counts.fetch(achievement.id, 0) %></strong></span>
+          </p>
+        </div>
+        <div class="achievement-actions"><%= link_to "Изменить", edit_admin_achievement_path(achievement), class: "button button-secondary", aria: { label: "Изменить ачивку «#{achievement.name}»" } %></div>
+      </li>
+    <% end %>
+  </ul>
+<% else %>
+  <p class="empty">Ачивки пока не добавлены.</p>
+<% end %>

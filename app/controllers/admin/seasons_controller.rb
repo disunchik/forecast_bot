@@ -1,6 +1,6 @@
 module Admin
   class SeasonsController < BaseController
-    before_action :set_season, only: %i[show activate rollback rollback_preview]
+    before_action :set_season, only: %i[show activate rollback rollback_preview completion complete]
 
     def index
       @seasons = Season.order(created_at: :desc)
@@ -26,6 +26,10 @@ module Admin
     def activate
       ActiveRecord::Base.transaction do
         Season.where(id: @season.id).update_all("id = id")
+        if @season.reload.completed?
+          redirect_to admin_seasons_path, alert: "Завершённый сезон нельзя запустить заново. Для исправлений используйте откат результатов."
+          return
+        end
         pending = Match.joins(:season, :forecasts).left_joins(:match_result)
                        .where(seasons: { active: true }).where.not(season_id: @season.id).where.not(status: :cancelled)
                        .where("match_results.id IS NULL OR match_results.state = ?", MatchResult.states[:draft]).distinct
@@ -38,6 +42,21 @@ module Admin
         @season.update!(active: true)
       end
       redirect_to admin_seasons_path, notice: "Активный сезон изменён."
+    end
+
+    def completion
+      @completion = SeasonCompletionService.new(season: @season, admin: current_user)
+      @pending_matches = @completion.pending_matches
+      @state_token = @completion.token
+    end
+
+    def complete
+      awards = SeasonCompletionService.new(season: @season, admin: current_user).complete!(
+        token: params[:state_token], confirmation: params[:confirmation]
+      )
+      redirect_to admin_season_path(@season), notice: "Сезон завершён. Выдано сезонных ачивок: #{awards.size}."
+    rescue SeasonCompletionService::Error, AdminStateToken::Error => e
+      redirect_to completion_admin_season_path(@season), alert: e.message
     end
 
     def rollback

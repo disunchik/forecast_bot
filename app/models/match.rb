@@ -14,6 +14,7 @@ class Match < ApplicationRecord
   validates :forecast_number, presence: true, numericality: { only_integer: true, greater_than_or_equal_to: 0 }, uniqueness: { scope: :season_id }
   validates :opponent, presence: true, length: { maximum: 80 }
   validates :kickoff_at, presence: true
+  validate :season_not_completed
   validate :finished_requires_confirmed_result
   validate :preserve_used_identity, on: :update
 
@@ -61,6 +62,12 @@ class Match < ApplicationRecord
   end
 
   private
+    def season_not_completed
+      if season_id && Season.where(id: season_id).where.not(completed_at: nil).exists?
+        errors.add(:base, "Сезон завершён. Для исправления сначала откатите результаты.")
+      end
+    end
+
     def preserve_used_identity
       if (will_save_change_to_season_id? || will_save_change_to_forecast_number?) && identity_locked?
         errors.add(:base, "Сезон и номер матча с историей изменять нельзя")
