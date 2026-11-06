@@ -32,7 +32,7 @@ module Admin
       end
 
       def change_award(action:)
-        @management.public_send("#{action}!", token: params[:state_token], reason: params[:reason], confirmation: params[:confirmation])
+        @management.public_send("#{action}!", token: params[:state_token], confirmation: params[:confirmation])
         redirect_to admin_achievement_path(@achievement), notice: action == "revoke" ? "Ачивка отозвана. ЗБ сохранены." : "Ачивка восстановлена без повторного начисления ЗБ."
       rescue AchievementAwardManagementService::Error, AdminStateToken::Error => e
         @error = e.message

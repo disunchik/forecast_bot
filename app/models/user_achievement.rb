@@ -13,7 +13,6 @@ class UserAchievement < ApplicationRecord
   end
 
   validates :revoked_by, presence: true, if: :revoked?
-  validates :revocation_reason, presence: true, if: :revoked?
   validates :awarded_at, presence: true
   validates :achievement_id, uniqueness: { scope: :user_id }
 end

@@ -74,7 +74,7 @@ class ConcurrentGameOperationsTest < ActiveSupport::TestCase
     token = AchievementAwardManagementService.new(award: award, admin: @admin).token(action: "revoke")
     operation = -> do
       management = AchievementAwardManagementService.new(award: UserAchievement.find(award.id), admin: @admin)
-      management.revoke!(token: token, reason: "Race", confirmation: "1")
+      management.revoke!(token: token, confirmation: "1")
       true
     end
     results = race(operation, operation)

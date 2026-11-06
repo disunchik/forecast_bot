@@ -7,7 +7,7 @@
           <div class="achievement-heading"><h3><%= link_to award.user.nickname, admin_user_path(award.user) %></h3></div>
           <p class="achievement-description">Выдана <%= moscow_time(award.awarded_at) %> · <%= award.awarded_by&.nickname || "Автоматически" %></p>
           <% if award.revoked? %>
-            <p class="achievement-description">Отозвана <%= moscow_time(award.revoked_at) %> · <%= award.revoked_by&.nickname %>. Причина: <%= award.revocation_reason %></p>
+            <p class="achievement-description">Отозвана <%= moscow_time(award.revoked_at) %> · <%= award.revoked_by&.nickname %>.<% if award.revocation_reason.present? %> Причина: <%= award.revocation_reason %><% end %></p>
           <% end %>
         </div>
         <div class="achievement-actions">

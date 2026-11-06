@@ -10,16 +10,16 @@ class AchievementAwardManagementService
     AdminStateToken.issue(scope: "achievement_award_#{action}", id: @award.id, state: @award.reload.attributes)
   end
 
-  def revoke!(token:, reason:, confirmation:)
-    change!(action: "revoke", token: token, reason: reason, confirmation: confirmation) do
+  def revoke!(token:, confirmation:)
+    change!(action: "revoke", token: token, confirmation: confirmation) do
       raise Error, "Ачивка уже отозвана" if @award.revoked?
 
-      @award.update!(revoked_at: Time.current, revoked_by: @admin, revocation_reason: reason.to_s.strip)
+      @award.update!(revoked_at: Time.current, revoked_by: @admin, revocation_reason: nil)
     end
   end
 
-  def restore!(token:, reason:, confirmation:)
-    change!(action: "restore", token: token, reason: reason, confirmation: confirmation) do
+  def restore!(token:, confirmation:)
+    change!(action: "restore", token: token, confirmation: confirmation) do
       raise Error, "Ачивка не отозвана" unless @award.revoked?
 
       @award.update!(revoked_at: nil, revoked_by: nil, revocation_reason: nil)
@@ -27,9 +27,8 @@ class AchievementAwardManagementService
   end
 
   private
-    def change!(action:, token:, reason:, confirmation:)
+    def change!(action:, token:, confirmation:)
       raise Error, "Доступ только для администраторов" unless @admin&.admin?
-      raise Error, "Укажите причину" if reason.blank?
       raise Error, "Подтвердите действие" unless confirmation == "1"
 
       UserAchievement.transaction do
@@ -40,7 +39,7 @@ class AchievementAwardManagementService
         before = @award.attributes.dup
         yield
         AuditLogger.record!(admin: @admin, action: "achievement.#{action}", auditable: @award.achievement,
-                            details: { award_id: @award.id, user_id: @award.user_id, reason: reason.to_s.strip,
+                            details: { award_id: @award.id, user_id: @award.user_id,
                                        gold_points: "preserved", before: before, after: @award.attributes })
         @award
       end

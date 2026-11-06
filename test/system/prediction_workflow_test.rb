@@ -247,7 +247,7 @@ class PredictionWorkflowTest < ApplicationSystemTestCase
     page.driver.browser.execute_cdp("Emulation.clearDeviceMetricsOverride")
   end
 
-  test "admin can inspect recipients revoke with a reason and restore without new gold" do
+  test "admin can inspect recipients revoke with confirmation and restore without new gold" do
     achievement = Achievement.create!(name: "Тестировщик", description: "За участие в тестовых прогнозах.")
     award = GoldPointsService.award_achievement!(user: @user, achievement: achievement, admin: @admin)
     login(@admin)
@@ -271,7 +271,7 @@ class PredictionWorkflowTest < ApplicationSystemTestCase
       end
       assert_selector "nav[aria-label='Разделы админки'] a[aria-current='page']", text: "Ачивки"
       assert_text "Автоматические проверки не выдадут её снова"
-      assert_selector "textarea[required]"
+      assert_no_selector "textarea[name=reason], input[name=reason]"
       assert_selector "input[type='checkbox'][required]"
       assert page.evaluate_script("document.documentElement.scrollWidth <= window.innerWidth")
       if ENV["UI_ARTIFACT_DIR"]
@@ -279,7 +279,6 @@ class PredictionWorkflowTest < ApplicationSystemTestCase
         page.save_screenshot(File.join(ENV.fetch("UI_ARTIFACT_DIR"), "achievement-revoke-#{width}.png"))
       end
     end
-    fill_in "Причина", with: "Ошибочно выбрал участника"
     check "Подтверждаю отзыв", allow_label_click: true
     click_button "Отозвать ачивку"
     assert_current_path admin_achievement_path(achievement)
@@ -287,10 +286,8 @@ class PredictionWorkflowTest < ApplicationSystemTestCase
     assert_selector "#recipients-heading", text: "Получатели 0"
     find("summary", text: "Отозванные выдачи").click
     within "#user_achievement_#{award.id}" do
-      assert_text "Ошибочно выбрал участника"
       click_link "Восстановить"
     end
-    fill_in "Причина", with: "Отзыв был ошибкой"
     check "Подтверждаю восстановление", allow_label_click: true
     click_button "Восстановить ачивку"
     assert_current_path admin_achievement_path(achievement)

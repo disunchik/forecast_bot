@@ -12,7 +12,7 @@ class AchievementAwardManagementTest < ActiveSupport::TestCase
   end
 
   def revoke(**options)
-    @management.revoke!(**{ token: @management.token(action: "revoke"), reason: "Ошибочная выдача", confirmation: "1" }.merge(options))
+    @management.revoke!(**{ token: @management.token(action: "revoke"), confirmation: "1" }.merge(options))
   end
 
   test "revoke preserves award history funds reservations and first cohort" do
@@ -24,7 +24,7 @@ class AchievementAwardManagementTest < ActiveSupport::TestCase
     end
     assert @award.reload.revoked?
     assert_equal @admin, @award.revoked_by
-    assert_equal "Ошибочная выдача", @award.revocation_reason
+    assert_nil @award.revocation_reason
     assert_equal original["awarded_at"], @award.awarded_at
     assert_equal 3, @user.gold_points_balance(@season)
     assert_equal 3, @user.reserved_gold_points(@season)
@@ -38,8 +38,8 @@ class AchievementAwardManagementTest < ActiveSupport::TestCase
     assert_equal "preserved", log.details["gold_points"]
   end
 
-  test "reason confirmation admin and a current action bound token are required" do
-    [ { reason: " " }, { confirmation: nil }, { token: "invalid" }, { token: @management.token(action: "restore") } ].each do |options|
+  test "confirmation admin and a current action bound token are required" do
+    [ { confirmation: nil }, { token: "invalid" }, { token: @management.token(action: "restore") } ].each do |options|
       assert_no_difference("AuditLog.count") do
         assert_raises(AchievementAwardManagementService::Error, AdminStateToken::Error) { revoke(**options) }
       end
@@ -47,7 +47,7 @@ class AchievementAwardManagementTest < ActiveSupport::TestCase
     end
     invalid = AchievementAwardManagementService.new(award: @award, admin: @user)
     assert_raises(AchievementAwardManagementService::Error) do
-      invalid.revoke!(token: invalid.token(action: "revoke"), reason: "Reason", confirmation: "1")
+      invalid.revoke!(token: invalid.token(action: "revoke"), confirmation: "1")
     end
   end
 
@@ -57,7 +57,7 @@ class AchievementAwardManagementTest < ActiveSupport::TestCase
     assert_no_difference("AuditLog.count") do
       assert_raises(AdminStateToken::Error) { revoke(token: old_token) }
     end
-    @management.restore!(token: @management.token(action: "restore"), reason: "Возврат", confirmation: "1")
+    @management.restore!(token: @management.token(action: "restore"), confirmation: "1")
     assert_no_difference("AuditLog.count") do
       assert_raises(AdminStateToken::Error) { revoke(token: old_token) }
     end
@@ -70,7 +70,7 @@ class AchievementAwardManagementTest < ActiveSupport::TestCase
     @season.update!(active: false)
     @achievement.update!(active: false)
     assert_no_difference [ "UserAchievement.count", "GoldPointTransaction.count" ] do
-      @management.restore!(token: @management.token(action: "restore"), reason: "Отзыв ошибочен", confirmation: "1")
+      @management.restore!(token: @management.token(action: "restore"), confirmation: "1")
     end
     assert_nil @award.reload.revoked_at
     assert_nil @award.revoked_by_id
