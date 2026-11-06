@@ -36,4 +36,6 @@ rules.each do |key, (value, label)|
   end
 end
 
-puts "Seeds: competitions=#{Competition.count}, seasons=#{Season.count}, rules=#{ScoringRule.count}"
+AchievementCatalog.install!
+
+puts "Seeds: competitions=#{Competition.count}, seasons=#{Season.count}, rules=#{ScoringRule.count}, achievements=#{Achievement.count}"

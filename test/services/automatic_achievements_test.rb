@@ -181,6 +181,20 @@ class AutomaticAchievementsTest < ActiveSupport::TestCase
     end
   end
 
+  test "head hunter ignores initial placement vacant slots and movement within top ten" do
+    groups = [ :overall, :top_ten, :top_ten, :challenger, :top_ten, :top_ten ]
+    groups.each_with_index do |group, index|
+      match = index.zero? ? @match : make_match
+      confirm(match)
+      snapshot = match.standing_snapshot
+      snapshot.entries.create!(user: @user, group_name: group, rank: group == :top_ten ? 5 : 1, points: 0, last_match_points: 0)
+      snapshot.entries.create!(user: @other_user, group_name: index.zero? ? :overall : :top_ten, rank: 2, points: 0, last_match_points: 0)
+      assert_empty rule_recipients("three_promotions", match: match)
+    end
+    assert_equal 6, @season.standing_snapshots.count
+    assert_empty UserAchievement.all
+  end
+
   test "player mentions never combine scorer assist or season periods" do
     player = Player.create!(name: "Quota player")
     12.times do |i|
