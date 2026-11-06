@@ -1,0 +1,19 @@
+<% if achievements.any? %>
+  <ul class="achievement-list" role="list" aria-label="<%= label %>">
+    <% achievements.each do |achievement| %>
+      <li id="<%= dom_id(achievement) %>" class="achievement">
+        <%= render "shared/achievement_artwork", achievement: achievement, reveal_secret: true %>
+        <div class="achievement-content">
+          <div class="achievement-heading"><h3><%= achievement.name %></h3></div>
+          <p class="achievement-description"><%= achievement.description.presence || "Условие не указано" %></p>
+          <% if achievement.secret? %><p class="achievement-meta">Секретная · <%= achievement.revealed? ? "условие раскрыто" : "условие скрыто от участников" %></p><% end %>
+        </div>
+        <div class="achievement-actions">
+          <%= button_to "Выдать", award_admin_achievement_path(achievement), method: :post, params: { user_id: user.id }, class: "button button-small", aria: { label: "Выдать «#{achievement.name}» участнику #{user.nickname}" } %>
+        </div>
+      </li>
+    <% end %>
+  </ul>
+<% else %>
+  <p class="empty"><%= empty_message %></p>
+<% end %>

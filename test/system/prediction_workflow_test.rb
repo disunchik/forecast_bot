@@ -172,6 +172,7 @@ class PredictionWorkflowTest < ApplicationSystemTestCase
       assert_equal width, page.evaluate_script("window.innerWidth")
       assert_selector ".achievement-list > li", count: 13
       assert_selector ".achievement--earned", count: 2
+      assert_equal [ "achievement_#{secret.id}", "achievement_#{romanist.id}" ], all(".achievement-list > li").first(2).map { |row| row[:id] }
       assert_no_selector "table"
       within "#achievement_#{romanist.id}" do
         assert_text "Получена"
@@ -212,6 +213,36 @@ class PredictionWorkflowTest < ApplicationSystemTestCase
       click_link "Изменить"
     end
     assert_current_path edit_admin_achievement_path(romanist)
+    tester = Achievement.find_by!(name: "Тестировщик")
+    debut = Achievement.find_by!(name: "Дебютант")
+    [ [ 1280, 900 ], [ 768, 1024 ], [ 320, 844 ], [ 390, 844 ] ].each do |width, height|
+      page.driver.browser.execute_cdp("Emulation.setDeviceMetricsOverride", width: width, height: height, deviceScaleFactor: 1, mobile: false)
+      visit admin_user_path(@other_user)
+      assert_selector "section[aria-labelledby='automatic-achievements-heading'] .achievement", count: 12
+      assert_selector "section[aria-labelledby='manual-achievements-heading'] .achievement", count: 1
+      within "#achievement_#{debut.id}" do
+        assert_text debut.description
+        assert_selector "button[aria-label]", text: "Выдать"
+      end
+      within "#achievement_#{tester.id}" do
+        assert_text tester.description
+      end
+      assert page.evaluate_script("document.documentElement.scrollWidth <= window.innerWidth")
+      assert page.evaluate_script("Array.from(document.querySelectorAll('.achievement-actions button')).every(button => {const box=button.getBoundingClientRect();return box.width>=44 && box.height>=44 && box.right<=innerWidth})")
+      if ENV["UI_ARTIFACT_DIR"]
+        page.execute_script("document.getElementById('automatic-achievements-heading').scrollIntoView({block:'start',behavior:'instant'})")
+        page.save_screenshot(File.join(ENV.fetch("UI_ARTIFACT_DIR"), "achievement-awards-#{width}.png"))
+      end
+    end
+    [ debut, tester ].each do |achievement|
+      within "#achievement_#{achievement.id}" do
+        click_button "Выдать"
+      end
+      assert_current_path admin_user_path(@other_user)
+      assert_text "Ачивка выдана."
+      assert_no_selector "#achievement_#{achievement.id}"
+      assert @other_user.user_achievements.exists?(achievement: achievement)
+    end
   ensure
     page.driver.browser.execute_cdp("Emulation.clearDeviceMetricsOverride")
   end

@@ -21,21 +21,16 @@
   <% end %>
 </div>
 
-<h2 class="section-heading">Выдать ачивку</h2>
-<div class="card">
-  <% available_achievements = Achievement.active.where.not(id: @user.achievement_ids).order(:name) %>
-  <% if available_achievements.any? %>
-    <% available_achievements.each do |achievement| %>
-      <div class="actions">
-        <strong><%= achievement.name %></strong>
-        <span class="muted"><%= achievement.secret? ? "секретная" : "обычная" %></span>
-        <%= button_to "Выдать", award_admin_achievement_path(achievement), method: :post, params: { user_id: @user.id }, class: "button button-small" %>
-      </div>
-    <% end %>
-  <% else %>
-    <p class="muted">Доступных ачивок для выдачи нет.</p>
-  <% end %>
-</div>
+<section aria-labelledby="automatic-achievements-heading">
+  <h2 id="automatic-achievements-heading" class="section-heading">Выдать автоматические</h2>
+  <p class="muted">Ручная выдача, если автоматическая проверка не сработала. Перед выдачей проверьте выполнение условия.</p>
+  <%= render "admin/achievements/award_list", achievements: @automatic_achievements, user: @user, label: "Автоматические ачивки для выдачи", empty_message: "Доступных автоматических ачивок для выдачи нет." %>
+</section>
+
+<section aria-labelledby="manual-achievements-heading">
+  <h2 id="manual-achievements-heading" class="section-heading">Выдать ручные</h2>
+  <%= render "admin/achievements/award_list", achievements: @manual_achievements, user: @user, label: "Ручные ачивки для выдачи", empty_message: "Доступных ручных ачивок для выдачи нет." %>
+</section>
 
 <h2 class="section-heading">История ЗБ</h2>
 <div class="table-wrap">
