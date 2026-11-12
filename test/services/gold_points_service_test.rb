@@ -18,8 +18,39 @@ class GoldPointsServiceTest < ActiveSupport::TestCase
   test "manual withdrawal cannot consume reserves" do
     fund(amount: 5)
     make_forecast(gold_points_stake: 5)
-    assert_raises(GoldPointsService::Error) { fund(amount: -1) }
+    error = assert_raises(GoldPointsService::Error) { fund(amount: -1) }
+    assert_equal "Недостаточно ЗБ: доступно 0, для списания нужно 1. В нерассчитанных прогнозах зарезервировано 5 ЗБ.", error.message
     assert_equal 5, @user.gold_points_balance(@season)
+  end
+
+  test "withdrawal exceeding balance without forecasts reports insufficient points rather than reserves" do
+    fund(amount: 3)
+    assert_equal 0, @user.reserved_gold_points(@season)
+    assert_no_difference [ "GoldPointTransaction.count", "AuditLog.count" ] do
+      error = assert_raises(GoldPointsService::Error) { fund(amount: -4) }
+      assert_equal "Недостаточно ЗБ: доступно 3, для списания нужно 4.", error.message
+    end
+    assert_equal 3, @user.gold_points_balance(@season)
+  end
+
+  test "withdrawal can exhaust free points while preserving a closed forecast reserve" do
+    fund(amount: 5)
+    make_forecast(gold_points_stake: 2)
+    @match.update!(kickoff_at: 1.day.ago)
+    assert_no_difference [ "GoldPointTransaction.count", "AuditLog.count" ] do
+      error = assert_raises(GoldPointsService::Error) { fund(amount: -4) }
+      assert_equal "Недостаточно ЗБ: доступно 3, для списания нужно 4. В нерассчитанных прогнозах зарезервировано 2 ЗБ.", error.message
+    end
+    fund(amount: -3)
+    assert_equal 2, @user.gold_points_balance(@season)
+    assert_equal 2, @user.reserved_gold_points(@season)
+    assert_equal 0, @user.available_gold_points(@season)
+  end
+
+  test "withdrawal of the exact balance without reserves is allowed" do
+    fund(amount: 3)
+    fund(amount: -3)
+    assert_equal 0, @user.gold_points_balance(@season)
   end
 
   test "first ordinary recipients in one round share the reward and awards are permanent" do

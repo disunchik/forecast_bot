@@ -64,6 +64,18 @@ class ApplicationWorkflowsTest < ActionDispatch::IntegrationTest
     end
   end
 
+  test "admin withdrawing more points than balance sees an accurate error without a ledger mutation" do
+    fund(amount: 3)
+    sign_in_as(@admin)
+    assert_no_difference [ "GoldPointTransaction.count", "AuditLog.count" ] do
+      post admin_user_gold_point_transactions_path(@user), params: { amount: -4, note: "Correction" }
+    end
+    assert_redirected_to admin_user_path(@user)
+    follow_redirect!
+    assert_select ".alert", text: "Недостаточно ЗБ: доступно 3, для списания нужно 4."
+    assert_equal 3, @user.gold_points_balance(@season)
+  end
+
   test "own full forecast is linked and available before deadline while others remain hidden" do
     forecast = make_forecast
     sign_in_as(@user)
