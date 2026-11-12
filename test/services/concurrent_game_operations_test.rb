@@ -1,12 +1,15 @@
 require "test_helper"
 require_relative "../support/domain_test_helper"
+require_relative "../support/roster_test_helper"
 
 class ConcurrentGameOperationsTest < ActiveSupport::TestCase
   include DomainTestHelper
+  include RosterTestHelper
   self.use_transactional_tests = false
 
   setup { setup_domain }
   teardown do
+    @roster_players&.each(&:destroy!)
     if @season&.persisted?
       GoldPointTransaction.where(season: @season).delete_all
       @achievement&.destroy!
@@ -84,6 +87,18 @@ class ConcurrentGameOperationsTest < ActiveSupport::TestCase
     assert award.reload.revoked?
     assert_equal 3, @user.gold_points_balance(@season)
     assert_empty GoldPointsService.award_achievements!(users: [ @user ], achievement: @achievement, admin: @admin, season: @season)
+  end
+
+  test "parallel roster imports create one set of players and one batch audit" do
+    payload, token = PlayerRosterImport.preview(snapshot: roster_snapshot, admin: @admin)
+    choices = roster_choices(payload)
+    operation = -> { PlayerRosterImport.apply!(token: token, choices: choices, admin: User.find(@admin.id)) }
+    results = race(operation, operation)
+    @roster_players = Player.where(roma_profile_key: payload.fetch("rows").pluck("key")).to_a
+    assert_equal 1, results.count { |result| result.is_a?(Hash) && result[:created] == 25 }, results.inspect
+    assert_equal 1, results.count { |result| result.is_a?(PlayerRosterImport::StalePreview) }, results.inspect
+    assert_equal 25, @roster_players.size
+    assert_equal 1, AuditLog.where(action: "players.roster_import", admin: @admin).count
   end
 
   test "parallel season completion grants seasonal rewards once" do

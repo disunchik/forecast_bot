@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_11_06_160000) do
+ActiveRecord::Schema[8.1].define(version: 2026_11_12_140000) do
   create_table "achievements", force: :cascade do |t|
     t.boolean "active", default: true, null: false
     t.text "competition_ids", default: "[]", null: false
@@ -183,8 +183,10 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_06_160000) do
     t.boolean "active", default: true, null: false
     t.datetime "created_at", null: false
     t.string "name", null: false
+    t.string "roma_profile_key"
     t.datetime "updated_at", null: false
     t.index ["name"], name: "index_players_on_name", unique: true
+    t.index ["roma_profile_key"], name: "index_players_on_roma_profile_key", unique: true
   end
 
   create_table "scoring_rules", force: :cascade do |t|

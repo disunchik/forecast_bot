@@ -7,5 +7,7 @@ class Player < ApplicationRecord
   scope :active, -> { where(active: true).order(:name) }
   scope :inactive, -> { where(active: false).order(:name) }
 
+  validates :roma_profile_key, uniqueness: true, format: { with: /\A[a-z0-9]+(?:-[a-z0-9]+)*\z/ }, allow_nil: true
+
   validates :name, presence: true, uniqueness: { case_sensitive: false }
 end

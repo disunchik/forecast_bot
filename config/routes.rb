@@ -28,6 +28,9 @@ Rails.application.routes.draw do
         post :confirm
       end
     end
+    get "players/import", to: "player_roster_imports#new", as: :new_player_roster_import
+    post "players/import/preview", to: "player_roster_imports#preview", as: :preview_player_roster_import
+    post "players/import", to: "player_roster_imports#create", as: :player_roster_import
     resources :players, except: :show do
       member do
         patch :archive
