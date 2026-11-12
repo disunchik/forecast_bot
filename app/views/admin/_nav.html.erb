@@ -5,7 +5,7 @@
   <%= link_to "Результаты", admin_results_path, aria: { current: controller_path.in?(["admin/results", "admin/match_results"]) ? "page" : nil } %>
   <%= link_to "Таблица", admin_standings_path, aria: { current: controller_path == "admin/standings" ? "page" : nil } %>
   <%= link_to "ЗБ", admin_gold_point_transactions_path, aria: { current: controller_path == "admin/gold_point_transactions" ? "page" : nil } %>
-  <%= link_to "Футболисты", admin_players_path, aria: { current: controller_path == "admin/players" ? "page" : nil } %>
+  <%= link_to "Футболисты", admin_players_path, aria: { current: controller_path.in?(["admin/players", "admin/player_roster_imports"]) ? "page" : nil } %>
   <%= link_to "Участники", admin_users_path, aria: { current: controller_path == "admin/users" ? "page" : nil } %>
   <%= link_to "Ачивки", admin_achievements_path, aria: { current: controller_path.in?(["admin/achievements", "admin/achievement_awards"]) ? "page" : nil } %>
   <%= link_to "Правила", admin_scoring_rules_path, aria: { current: controller_path == "admin/scoring_rules" ? "page" : nil } %>

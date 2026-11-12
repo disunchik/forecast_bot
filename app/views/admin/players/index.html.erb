@@ -1,15 +1,32 @@
 <%= render "admin/nav" %>
 <div class="page-heading">
   <h1>Футболисты Ромы</h1>
-  <%= link_to "Добавить игрока", new_admin_player_path, class: "button" %>
+  <div class="player-actions">
+    <%= link_to "Загрузить состав Ромы", admin_new_player_roster_import_path, class: "button" %>
+    <%= link_to "Добавить игрока", new_admin_player_path, class: "button button-secondary" %>
+  </div>
 </div>
 <nav class="admin-nav filters" aria-label="Статус футболистов">
   <%= link_to "Активные (#{@active_count})", admin_players_path(tab: "active"), aria: { current: @tab == "active" ? "page" : nil } %>
   <%= link_to "Неактивные (#{@inactive_count})", admin_players_path(tab: "inactive"), aria: { current: @tab == "inactive" ? "page" : nil } %>
 </nav>
-<div class="table-wrap"><table><thead><tr><th scope="col">Игрок</th><th scope="col">Статус</th><th scope="col"><span class="sr-only">Действие</span></th></tr></thead><tbody>
-<% @players.each do |player| %>
-<tr><td><strong><%= player.name %></strong></td><td><span class="badge"><%= player.active? ? "Активный" : "Неактивный" %></span></td><td><div class="actions"><%= link_to "Изменить", edit_admin_player_path(player) %><% if player.active? %><%= button_to "В неактивные", archive_admin_player_path(player), method: :patch, class: "button button-small button-secondary" %><% else %><%= button_to "Вернуть", restore_admin_player_path(player), method: :patch, class: "button button-small" %><% end %></div></td></tr>
+<% if @players.any? %>
+  <ul class="player-list" role="list" aria-label="Футболисты Ромы">
+    <% @players.each do |player| %>
+      <li class="player-row" id="<%= dom_id(player) %>">
+        <h2><%= player.name %></h2>
+        <span class="badge"><%= player.active? ? "Активный" : "Неактивный" %></span>
+        <div class="player-actions">
+          <%= link_to "Изменить", edit_admin_player_path(player), aria: { label: "Изменить игрока #{player.name}" } %>
+          <% if player.active? %>
+            <%= button_to "В неактивные", archive_admin_player_path(player), method: :patch, class: "button button-small button-secondary", aria: { label: "Перевести #{player.name} в неактивные" } %>
+          <% else %>
+            <%= button_to "Вернуть", restore_admin_player_path(player), method: :patch, class: "button button-small button-secondary", aria: { label: "Вернуть #{player.name} в активные" } %>
+          <% end %>
+        </div>
+      </li>
+    <% end %>
+  </ul>
+<% else %>
+  <p class="empty">В этом разделе пока нет футболистов.</p>
 <% end %>
-<% if @players.empty? %><tr><td colspan="3" class="empty">Список пуст.</td></tr><% end %>
-</tbody></table></div>

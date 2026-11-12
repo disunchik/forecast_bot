@@ -1,0 +1,21 @@
+<%= render "admin/nav" %>
+<div class="page-heading"><h1>Загрузить состав Ромы</h1></div>
+<% if @error %><div class="alert alert-error" role="alert" tabindex="-1" autofocus><%= @error %></div><% end %>
+<div class="player-import-intro">
+  <p>Получите список с сайта клуба, проверьте имена и добавьте выбранных футболистов за один раз.</p>
+  <p class="muted">Уже добавленные имена и статусы сохранятся. Отсутствующие в источнике футболисты останутся в вашем списке.</p>
+  <%= form_with url: admin_preview_player_roster_import_path, method: :post, data: { turbo: false, controller: "submit-state", action: "submit->submit-state#submit pageshow@window->submit-state#reset" } do %>
+    <%= hidden_field_tag :source, "live" %>
+    <%= submit_tag "Получить состав с сайта Ромы", data: { turbo_submits_with: "Загружаем состав…" } %>
+  <% end %>
+  <section class="player-import-saved" aria-labelledby="saved-roster-heading">
+    <h2 id="saved-roster-heading">Сохранённый состав</h2>
+    <p>Проверенная копия от <strong><%= moscow_time(@saved_date) %></strong>. Её можно использовать, если сайт клуба недоступен. Это список на указанную дату.</p>
+    <p><%= link_to "Источник: официальный сайт AS Roma", RomaRosterSource::URL, target: "_blank", rel: "noopener noreferrer" %></p>
+    <%= form_with url: admin_preview_player_roster_import_path, method: :post, data: { turbo: false, controller: "submit-state", action: "submit->submit-state#submit pageshow@window->submit-state#reset" } do %>
+      <%= hidden_field_tag :source, "saved" %>
+      <%= submit_tag "Посмотреть сохранённый состав", class: "button button-secondary", data: { turbo_submits_with: "Открываем состав…" } %>
+    <% end %>
+  </section>
+  <div class="actions"><%= link_to "Вернуться к футболистам", admin_players_path %></div>
+</div>

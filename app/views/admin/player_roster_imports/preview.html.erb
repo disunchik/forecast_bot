@@ -1,0 +1,54 @@
+<%= render "admin/nav" %>
+<div class="page-heading"><h1>Проверить состав</h1></div>
+<% if @error %><div class="alert alert-error" role="alert" tabindex="-1" autofocus><%= @error %></div><% end %>
+<% snapshot = @preview.fetch("snapshot") %>
+<div class="player-import-intro">
+  <p><strong><%= snapshot.fetch("source") == "saved" ? "Сохранённая копия" : "Получено с сайта клуба" %></strong> · <%= moscow_time(Time.iso8601(snapshot.fetch("retrieved_at"))) %></p>
+  <p><%= link_to "Источник: официальный сайт AS Roma", RomaRosterSource::URL, target: "_blank", rel: "noopener noreferrer" %></p>
+  <p>Футболистов в источнике: <strong class="numeric"><%= @preview.fetch("rows").size %></strong>. Новых с готовым именем: <strong class="numeric"><%= @preview.fetch("rows").count { |row| row.fetch("status") == "new" } %></strong>.</p>
+  <p class="muted">Новые футболисты с готовыми русскими именами уже выбраны. Можно изменить имя или пропустить строку. Существующие имена и статусы сохранятся; сопоставления свяжут записи без создания дублей.</p>
+</div>
+<%= form_with url: admin_player_roster_import_path, method: :post, data: { turbo: false, controller: "submit-state", action: "submit->submit-state#submit pageshow@window->submit-state#reset" } do %>
+  <%= hidden_field_tag :preview_token, @preview_token %>
+  <ul class="player-import-list" role="list" aria-label="Предпросмотр состава">
+    <% @preview.fetch("rows").each_with_index do |row, index| %>
+      <% key = row.fetch("key"); status = row.fetch("status"); choice = @choices.fetch(key, {}); action = choice.fetch("action", PlayerRosterImport.default_action(row)) %>
+      <li class="player-import-row" id="roster-<%= key %>">
+        <div class="player-import-info">
+          <h2><%= row.fetch("original_name") %></h2>
+          <span class="badge"><%= { "new" => "Новый", "unknown" => "Нужно русское имя", "existing" => "Уже добавлен", "inactive" => "Уже добавлен · неактивен", "ambiguous" => "Проверьте совпадение", "conflict" => "Профиль уже связан с другой записью" }.fetch(status) %></span>
+        </div>
+        <% if status.in?(%w[existing inactive]) %>
+          <div class="player-import-fields">
+            <p><strong><%= row.fetch("candidates").first.fetch("name") %></strong></p>
+            <p class="muted">Имя и статус не изменятся.</p>
+            <%= hidden_field_tag "rows[#{key}][action]", PlayerRosterImport.default_action(row) %>
+          </div>
+        <% elsif status.in?(%w[new unknown]) %>
+          <div class="player-import-fields">
+            <div class="field"><%= label_tag "roster-name-#{index}", "Имя для сайта" %><%= text_field_tag "rows[#{key}][name]", choice.fetch("name", row.fetch("name")), id: "roster-name-#{index}", maxlength: 160, autocomplete: "off", aria: { label: "Имя для сайта: #{row.fetch('original_name')}" } %></div>
+            <div class="player-import-choice">
+              <%= hidden_field_tag "rows[#{key}][action]", "skip" %>
+              <%= check_box_tag "rows[#{key}][action]", "create", action == "create", id: "roster-action-#{index}", aria: { label: "Добавить в состав: #{row.fetch('original_name')}" } %>
+              <%= label_tag "roster-action-#{index}", "Добавить в состав" %>
+            </div>
+          </div>
+        <% elsif status == "ambiguous" %>
+          <div class="player-import-fields">
+            <div class="field">
+              <%= label_tag "roster-action-#{index}", "Сопоставить с футболистом" %>
+              <%= select_tag "rows[#{key}][action]", options_for_select([["Пропустить", "skip"]] + row.fetch("candidates").map { |candidate| ["#{candidate.fetch('name')} · #{candidate.fetch('active') ? 'активный' : 'неактивный'}", "match:#{candidate.fetch('id')}"] }, action), id: "roster-action-#{index}" %>
+            </div>
+          </div>
+        <% else %>
+          <p>Проверьте связанные записи в разделе футболистов. Эта строка будет пропущена.</p>
+          <%= hidden_field_tag "rows[#{key}][action]", "skip" %>
+        <% end %>
+      </li>
+    <% end %>
+  </ul>
+  <div class="actions player-actions">
+    <%= submit_tag "Применить выбранное", data: { turbo_submits_with: "Сохраняем состав…" } %>
+    <%= link_to "Отмена", admin_players_path, class: "button button-secondary" %>
+  </div>
+<% end %>

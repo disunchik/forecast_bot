@@ -1,2 +1,7 @@
-<%= render "admin/nav" %><h1>Изменить игрока</h1><div class="card"><%= render "form", player: @player %></div>
-<div class="actions"><%= button_to "Удалить игрока", admin_player_path(@player), method: :delete, class: "button button-danger", data: { turbo_confirm: "Если игрок уже использовался в прогнозах/результатах, удаление будет запрещено. Продолжить?" } %></div>
+<%= render "admin/nav" %>
+<h1>Изменить игрока</h1>
+<div class="card player-form"><%= render "form", player: @player %></div>
+<section class="player-delete" aria-label="Удаление футболиста">
+  <p class="muted">Если футболист уже есть в прогнозах или результатах, переведите его в неактивные — история сохранится.</p>
+  <%= button_to "Удалить игрока", admin_player_path(@player), method: :delete, class: "button button-danger", data: { turbo_confirm: "Если игрок уже использовался в прогнозах/результатах, удаление будет запрещено. Продолжить?" } %>
+</section>

@@ -1,8 +1,10 @@
 require "application_system_test_case"
 require_relative "../support/domain_test_helper"
+require_relative "../support/roster_test_helper"
 
 class PredictionWorkflowTest < ApplicationSystemTestCase
   include DomainTestHelper
+  include RosterTestHelper
   setup { setup_domain }
 
   def login(user)
@@ -301,6 +303,99 @@ class PredictionWorkflowTest < ApplicationSystemTestCase
       assert_text "Тестировщик"
       assert_link "Отозвать"
     end
+  ensure
+    page.driver.browser.execute_cdp("Emulation.clearDeviceMetricsOverride")
+  end
+
+  test "player management spaces actions focuses new name and focuses server errors" do
+    Player.create!(name: "Миле Свилар")
+    login(@admin)
+    [ [ 1280, 900 ], [ 768, 1024 ], [ 320, 844 ], [ 390, 844 ] ].each do |width, height|
+      page.driver.browser.execute_cdp("Emulation.setDeviceMetricsOverride", width: width, height: height, deviceScaleFactor: 1, mobile: false)
+      visit admin_players_path
+      assert_selector ".player-row", count: 1
+      assert_no_selector "table"
+      assert page.evaluate_script("document.documentElement.scrollWidth <= innerWidth")
+      assert_equal "24px", page.evaluate_script("getComputedStyle(document.querySelector('.player-row .player-actions')).gap")
+      assert_equal "0px", page.evaluate_script("getComputedStyle(document.querySelector('.player-row .player-actions')).marginTop")
+      if ENV["UI_ARTIFACT_DIR"]
+        page.execute_script("document.querySelector('.player-list').scrollIntoView({block:'center',behavior:'instant'})")
+        page.save_screenshot(File.join(ENV.fetch("UI_ARTIFACT_DIR"), "players-#{width}.png"))
+      end
+      click_link "Добавить игрока"
+      assert_selector "#player_name:focus"
+      assert page.evaluate_script("document.querySelector('.player-form').getBoundingClientRect().width <= 680")
+      expected_padding = width <= 760 ? "20px" : "32px"
+      assert_equal expected_padding, page.evaluate_script("getComputedStyle(document.querySelector('.player-form')).paddingLeft")
+      if ENV["UI_ARTIFACT_DIR"]
+        page.save_screenshot(File.join(ENV.fetch("UI_ARTIFACT_DIR"), "player-form-#{width}.png"))
+      end
+      fill_in "Имя игрока", with: "Миле Свилар"
+      click_button "Сохранить"
+      assert_selector "[role=alert]", text: "Проверьте данные"
+      assert page.evaluate_script("document.activeElement.matches('[role=alert]')")
+      assert_no_selector "#player_name[autofocus]"
+    end
+  ensure
+    page.driver.browser.execute_cdp("Emulation.clearDeviceMetricsOverride")
+  end
+
+  test "roster import offers dated fallback previews Russian names and applies atomically" do
+    existing = Player.create!(name: "Миле Свилар")
+    inactive = Player.create!(name: "Дэвис Васкес", active: false)
+    missing = Player.create!(name: "Игрок вне источника")
+    login(@admin)
+    visit admin_players_path
+    click_link "Загрузить состав Ромы"
+    with_method_override(RomaRosterSource, :live, -> { raise RomaRosterSource::Error, "Сайт недоступен" }) do
+      click_button "Получить состав с сайта Ромы"
+      assert_selector "[role=alert]", text: "Сайт недоступен"
+    end
+    assert_no_selector ".player-import-row"
+    assert_button "Посмотреть сохранённый состав"
+    [ [ 1280, 900 ], [ 768, 1024 ], [ 320, 844 ], [ 390, 844 ] ].each do |width, height|
+      page.driver.browser.execute_cdp("Emulation.setDeviceMetricsOverride", width: width, height: height, deviceScaleFactor: 1, mobile: false)
+      visit admin_new_player_roster_import_path
+      click_button "Посмотреть сохранённый состав"
+      assert_text "Сохранённая копия"
+      if width == 1280
+        page.go_back
+        assert_button "Посмотреть сохранённый состав", disabled: false
+        click_button "Посмотреть сохранённый состав"
+      end
+      assert_selector ".player-import-row", count: 25
+      within "#roster-devis-vasquez" do
+        assert_text "Уже добавлен · неактивен"
+        assert_text "Дэвис Васкес"
+      end
+      within "#roster-matias-soule" do
+        assert_selector "input[value='Матиас Суле']"
+        assert_selector "input[type=checkbox][value=create][checked]"
+      end
+      assert page.evaluate_script("document.documentElement.scrollWidth <= innerWidth")
+      if ENV["UI_ARTIFACT_DIR"]
+        page.execute_script("document.querySelector('.player-import-list').scrollIntoView({block:'start',behavior:'instant'})")
+        page.save_screenshot(File.join(ENV.fetch("UI_ARTIFACT_DIR"), "roster-preview-#{width}.png"))
+      end
+    end
+    within "#roster-matias-soule" do
+      fill_in "Имя для сайта", with: ""
+    end
+    click_button "Применить выбранное"
+    assert_selector "[role=alert]", text: "Укажите русское имя"
+    assert_equal 3, Player.count
+    within "#roster-matias-soule" do
+      fill_in "Имя для сайта", with: "Матиас Суле"
+    end
+    click_button "Применить выбранное"
+    assert_current_path admin_players_path
+    assert_text "Добавлено футболистов: 23"
+    assert_equal 26, Player.count
+    assert_equal "Миле Свилар", existing.reload.name
+    assert_not inactive.reload.active?
+    assert missing.reload.active?
+    assert_equal "mile-svilar", existing.roma_profile_key
+    assert_equal "devis-vasquez", inactive.roma_profile_key
   ensure
     page.driver.browser.execute_cdp("Emulation.clearDeviceMetricsOverride")
   end
