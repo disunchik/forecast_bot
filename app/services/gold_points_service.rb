@@ -14,8 +14,14 @@ class GoldPointsService
     raise Error, "Укажите причину" if note.blank?
     raise Error, "Укажите целое число" unless amount.to_s.match?(/\A-?\d+\z/)
     raise Error, "Сумма не может быть нулевой" if amount.to_i.zero?
-    if amount.to_i.negative? && user.gold_points_balance(season) + amount.to_i < user.reserved_gold_points(season)
-      raise Error, "Нельзя списать ЗБ, которые уже зарезервированы в открытых прогнозах"
+    if amount.to_i.negative?
+      balance = user.gold_points_balance(season)
+      reserved = user.reserved_gold_points(season)
+      if balance + amount.to_i < reserved
+        message = "Недостаточно ЗБ: доступно #{[ balance - reserved, 0 ].max}, для списания нужно #{-amount.to_i}."
+        message += " В нерассчитанных прогнозах зарезервировано #{reserved} ЗБ." if reserved.positive?
+        raise Error, message
+      end
     end
 
     transaction = GoldPointTransaction.create!(
